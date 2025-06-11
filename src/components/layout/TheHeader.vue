@@ -3,7 +3,6 @@
     app
     color="light-blue-accent-3"
     elevation="12"
-    class="px-3 py-3"
     style="border-bottom-left-radius: 8px; border-bottom-right-radius: 8px"
   >
     <v-app-bar-nav-icon
