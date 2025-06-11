@@ -27,7 +27,7 @@
         variant="outlined"
         color="white"
         class="ml-2"
-        :to="'/signup'"
+        :to="'/login'"
         prepend-icon="mdi-account-plus"
       >
         Login

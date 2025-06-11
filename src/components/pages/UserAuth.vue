@@ -7,6 +7,10 @@
         max-width="480"
         rounded="lg"
       >
+        <v-card-title class="text-h5 text-center mb-4">
+          Entra nel tuo account
+        </v-card-title>
+
         <v-form @submit.prevent="submitForm">
           <div class="text-subtitle-1 text-medium-emphasis">Username</div>
 
@@ -117,7 +121,7 @@ const submitForm = handleSubmit(async (values) => {
     await authStore.login({
       username: formPayload.username,
       password: formPayload.password,
-    }); 
+    });
     router.replace(`/users/${authStore.userId}/tasks/`);
   } catch (err) {
     console.error("Errore durante il login:", err);
