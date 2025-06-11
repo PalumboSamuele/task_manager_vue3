@@ -8,7 +8,7 @@
         rounded="lg"
       >
         <v-card-title class="text-h5 text-center mb-4">
-          Login
+          Entra nel tuo account
         </v-card-title>
 
         <v-form @submit.prevent="submitForm">
