@@ -81,8 +81,10 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/components/stores/auth/authStore";
 import { useField, useForm } from "vee-validate";
+import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const isLoading = ref(false);
 const error = ref(null);
