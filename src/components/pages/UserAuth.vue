@@ -7,6 +7,10 @@
         max-width="480"
         rounded="lg"
       >
+        <v-card-title class="text-h5 text-center mb-4">
+          Login
+        </v-card-title>
+
         <v-form @submit.prevent="submitForm">
           <div class="text-subtitle-1 text-medium-emphasis">Username</div>
 
@@ -77,8 +81,10 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/components/stores/auth/authStore";
 import { useField, useForm } from "vee-validate";
+import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const isLoading = ref(false);
 const error = ref(null);
@@ -117,7 +123,7 @@ const submitForm = handleSubmit(async (values) => {
     await authStore.login({
       username: formPayload.username,
       password: formPayload.password,
-    }); 
+    });
     router.replace(`/users/${authStore.userId}/tasks/`);
   } catch (err) {
     console.error("Errore durante il login:", err);

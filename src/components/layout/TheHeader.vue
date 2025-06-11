@@ -22,12 +22,13 @@
 
     <v-spacer></v-spacer>
 
+    <v-row align="center" class="flex-grow-0 mr-4 hidden-sm-and-down">
     <template v-if="!isLoggedIn">
       <v-btn
         variant="outlined"
         color="white"
         class="ml-2"
-        :to="'/signup'"
+        :to="'/login'"
         prepend-icon="mdi-account-plus"
       >
         Login
@@ -54,7 +55,7 @@
         Logout
       </v-btn>
     </template>
-    <v-row align="center" class="flex-grow-0 mr-4 hidden-sm-and-down"> </v-row>
+    </v-row>
   </v-app-bar>
 
   <!-- menu visibile solo in versione mobile -->

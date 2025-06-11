@@ -93,8 +93,10 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/components/stores/auth/authStore";
 import { useField, useForm } from "vee-validate";
+import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const isLoading = ref(false); // Per lo stato di caricamento del pulsante
 const error = ref(null);
@@ -104,7 +106,7 @@ const { handleSubmit } = useForm({
   validationSchema: {
     email(value) {
       if (!value) return "L'email è richiesta."; 
-      if (!/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value))
+      if (!/^[a-z0-9.-]+@[a-z.-]+\.[a-z]+$/i.test(value))
         return "L'email non è valida.";
       return true;
     },
