@@ -5,7 +5,7 @@
 
   <v-container fluid>
     <v-row justify="space-evenly">
-      <draggable
+      <Draggable
         v-model="tasks"
         item-key="title"
         handle=".drag-handle"
@@ -23,15 +23,15 @@
             ></base-task>
           </v-col>
         </template>
-      </draggable>
+      </Draggable>
     </v-row>
   </v-container>
 </template>
 
 <script lang="ts" setup>
 import BaseTask from "@/components/BaseTask.vue";
+import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
-import draggable from "vuedraggable"; // O VueDraggableNext, a seconda di come lo importi
 import { computed, ref } from "vue"; // Importa computed e ref
 
 const display = useDisplay();
