@@ -3,7 +3,6 @@
     app
     color="light-blue-accent-3"
     elevation="12"
-    class="px-3 py-3"
     style="border-bottom-left-radius: 8px; border-bottom-right-radius: 8px"
   >
     <v-app-bar-nav-icon
@@ -23,38 +22,38 @@
     <v-spacer></v-spacer>
 
     <v-row align="center" class="flex-grow-0 mr-4 hidden-sm-and-down">
-    <template v-if="!isLoggedIn">
-      <v-btn
-        variant="outlined"
-        color="white"
-        class="ml-2"
-        :to="'/login'"
-        prepend-icon="mdi-account-plus"
-      >
-        Login
-      </v-btn>
-      <v-btn
-        variant="outlined"
-        color="white"
-        class="ml-2"
-        :to="'/signup'"
-        prepend-icon="mdi-account-plus"
-      >
-        Sign Up
-      </v-btn>
-    </template>
+      <template v-if="!isLoggedIn">
+        <v-btn
+          variant="outlined"
+          color="white"
+          class="ml-2"
+          :to="'/login'"
+          prepend-icon="mdi-account-plus"
+        >
+          Login
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          color="white"
+          class="ml-2"
+          :to="'/signup'"
+          prepend-icon="mdi-account-plus"
+        >
+          Sign Up
+        </v-btn>
+      </template>
 
-    <template v-else-if="isLoggedIn">
-      <v-btn
-        variant="outlined"
-        color="white"
-        class="ml-2"
-        @click="logout"
-        prepend-icon="mdi-login"
-      >
-        Logout
-      </v-btn>
-    </template>
+      <template v-else-if="isLoggedIn">
+        <v-btn
+          variant="outlined"
+          color="white"
+          class="ml-2"
+          @click="logout"
+          prepend-icon="mdi-login"
+        >
+          Logout
+        </v-btn>
+      </template>
     </v-row>
   </v-app-bar>
 
@@ -62,28 +61,24 @@
   <v-navigation-drawer v-model="drawer" temporary app>
     <v-list>
       <v-list-item :to="'/home'" :class="{ 'mt-8': drawer }">
-        <v-list-item-icon>
+        <template #prepend>
           <v-icon>mdi-home</v-icon>
-        </v-list-item-icon>
-        <v-list-item-content>
-          <v-list-item-title>Home</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Home</v-list-item-title>
       </v-list-item>
+
       <v-list-item :to="'/login'">
-        <v-list-item-icon>
+        <template #prepend>
           <v-icon>mdi-login</v-icon>
-        </v-list-item-icon>
-        <v-list-item-content>
-          <v-list-item-title>Login</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Login</v-list-item-title>
       </v-list-item>
+
       <v-list-item :to="'/signup'">
-        <v-list-item-icon>
+        <template #prepend>
           <v-icon>mdi-account-plus</v-icon>
-        </v-list-item-icon>
-        <v-list-item-content>
-          <v-list-item-title>Sign Up</v-list-item-title>
-        </v-list-item-content>
+        </template>
+        <v-list-item-title>Sign Up</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>

@@ -9,7 +9,9 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseCard: typeof import('./components/ui/BaseCard.vue')['default']
-    BaseTask: typeof import('./components/BaseTask.vue')['default']
+    BaseTask: typeof import('./components/ui/BaseTask.vue')['default']
+    MainPage: typeof import('./components/pages/MainPage.vue')['default']
+    Pages: typeof import('./components/pages/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SignUp: typeof import('./components/pages/SignUp.vue')['default']
