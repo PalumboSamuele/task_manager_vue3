@@ -8,7 +8,7 @@
       :animation="200"
     >
       <template #item="{ element: task }">
-        <v-col :cols="columns" :key="task.taskId">
+        <v-col :cols="columns" :key="task.taskId" class="pa-2">
           <base-task
             :title="task.title"
             :priority="task.priority"

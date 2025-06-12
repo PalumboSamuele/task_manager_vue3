@@ -1,7 +1,7 @@
 <template>
   <v-card
     variant="outlined"
-    class="mx-auto my-3 d-flex flex-column"
+    class="my-3 d-flex flex-column"
     :class="[`bg-${priorityColor}`]"
     rounded="xl"
     hover
