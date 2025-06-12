@@ -10,7 +10,7 @@
           :animation="200"
         >
           <template #item="{ element: task }">
-            <v-col :cols="columns" _key=""task.taskId>
+            <v-col :cols="columns" :key="task.taskId">
               <base-task
                 :taskId="task.id"
                 :title="task.title"
