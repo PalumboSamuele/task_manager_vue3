@@ -2,13 +2,12 @@ import { defineStore } from "pinia";
 import api from "@/axios";
 import { useAuthStore } from "../auth/authStore";
 
-
 export interface Task {
   taskId: string;
   title: string;
   description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; // Added URGENT
-  status: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  priority: "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
   dueDate: string;
   createdDate: string;
   userId: string;
@@ -17,39 +16,35 @@ export interface Task {
 export interface AddTaskPayload {
   title: string;
   description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; // Added URGENT
-  status: 'pending' | 'in_progress' | 'done'; // Keep lowercase here as it's the input payload
+  priority: "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "" | "pending" | "in_progress" | "completed";
   dueDate: string;
 }
 
-
 export interface UpdateTaskPayload {
   taskId: string;
-  title?: string;
+  title: string;
   description?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; 
-  status?: 'PENDING' | 'IN_PROGRESS' | 'DONE'; 
-  dueDate?: string;
+  priority: "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  dueDate: string;
 }
-
 
 export interface DeleteTaskPayload {
   taskId: string;
 }
 
-
 interface TaskStoreState {
   lastFetch: number | null;
   tasks: Task[];
-  isLoading: boolean; 
+  isLoading: boolean;
 }
-
 
 export const useTaskStore = defineStore("tasks", {
   state: (): TaskStoreState => ({
     lastFetch: null,
     tasks: [],
-    isLoading: false, 
+    isLoading: false,
   }),
   getters: {
     getAllTasks(state): Task[] {
@@ -58,9 +53,11 @@ export const useTaskStore = defineStore("tasks", {
     hasTasks(state): boolean {
       return state.tasks && state.tasks.length > 0;
     },
-    taskById: (state) => (taskId: string): Task | undefined => {
-      return state.tasks.find((task) => task.taskId === taskId);
-    },
+    taskById:
+      (state) =>
+      (taskId: string): Task | undefined => {
+        return state.tasks.find((task) => task.taskId === taskId);
+      },
     shouldUpdate(state): boolean {
       if (!state.lastFetch) return true;
       const currentTimeStamp = new Date().getTime();
@@ -69,7 +66,7 @@ export const useTaskStore = defineStore("tasks", {
   },
 
   actions: {
-    setLoading(status: boolean) { 
+    setLoading(status: boolean) {
       this.isLoading = status;
     },
     setFetchTimestamp(): void {
@@ -85,15 +82,17 @@ export const useTaskStore = defineStore("tasks", {
       });
     },
 
-    async getTaskList({ forceRefresh = false }: { forceRefresh?: boolean } = {}): Promise<void> {
+    async getTaskList({
+      forceRefresh = false,
+    }: { forceRefresh?: boolean } = {}): Promise<void> {
       if (!forceRefresh && !this.shouldUpdate) {
         return;
       }
 
-      this.setLoading(true); 
+      this.setLoading(true);
       const userId = localStorage.getItem("userId");
       if (!userId) {
-        this.setLoading(false); 
+        this.setLoading(false);
         throw new Error("User ID not found");
       }
 
@@ -104,16 +103,18 @@ export const useTaskStore = defineStore("tasks", {
         const response = await api.get<Task[]>(ENDPOINT_URL);
         const responseData = response.data;
         this.$patch({
-          tasks: responseData.map((taskData): Task => ({
-            taskId: taskData.taskId,
-            title: taskData.title,
-            description: taskData.description,
-            priority: taskData.priority,
-            status: taskData.status,
-            dueDate: taskData.dueDate,
-            createdDate: taskData.createdDate,
-            userId: taskData.userId,
-          })),
+          tasks: responseData.map(
+            (taskData): Task => ({
+              taskId: taskData.taskId,
+              title: taskData.title,
+              description: taskData.description,
+              priority: taskData.priority,
+              status: taskData.status,
+              dueDate: taskData.dueDate,
+              createdDate: taskData.createdDate,
+              userId: taskData.userId,
+            })
+          ),
         });
 
         this.setFetchTimestamp();
@@ -134,15 +135,15 @@ export const useTaskStore = defineStore("tasks", {
             "Unexpected error occurred"
         );
       } finally {
-        this.setLoading(false); 
+        this.setLoading(false);
       }
     },
 
     async addTask(payload: AddTaskPayload): Promise<Task> {
-      this.setLoading(true); 
+      this.setLoading(true);
       const userId = localStorage.getItem("userId");
       if (!userId) {
-        this.setLoading(false); 
+        this.setLoading(false);
         throw new Error("User ID not found");
       }
 
@@ -151,15 +152,15 @@ export const useTaskStore = defineStore("tasks", {
       const task = {
         ...payload,
         userId,
-        status: payload.status.toUpperCase() as Task['status'],
-        priority: payload.priority.toUpperCase() as Task['priority'],
+        status: payload.status.toUpperCase() as Task["status"],
+        priority: payload.priority.toUpperCase() as Task["priority"],
       };
       try {
         console.log("Sending task:", task);
         const response = await api.post<Task>(ENDPOINT_URL, task, {
           headers: { "Content-Type": "application/json" },
         });
-        await this.getTaskList({ forceRefresh: true }); 
+        await this.getTaskList({ forceRefresh: true });
         return response.data;
       } catch (error: any) {
         console.error("Error response:", error.response?.data);
@@ -176,10 +177,10 @@ export const useTaskStore = defineStore("tasks", {
       }
     },
     async deleteTask(payload: DeleteTaskPayload): Promise<void> {
-      this.setLoading(true); // Set loading to true
+      this.setLoading(true);
       const userId = localStorage.getItem("userId");
       if (!userId) {
-        this.setLoading(false); // Reset loading on error
+        this.setLoading(false);
         throw new Error("User ID not found");
       }
 
@@ -187,11 +188,9 @@ export const useTaskStore = defineStore("tasks", {
       const authStore = useAuthStore();
 
       try {
-        console.log("Deleting task with ID:", payload.taskId);
         await api.delete(ENDPOINT_URL);
-        await this.getTaskList({ forceRefresh: true }); 
+        await this.getTaskList({ forceRefresh: true });
       } catch (error: any) {
-        console.error("Delete error:", error.response?.data);
         if (error.response?.status === 401) {
           authStore.logout();
         } else if (error.response?.status === 404) {
@@ -205,15 +204,15 @@ export const useTaskStore = defineStore("tasks", {
             "Couldn't delete the task"
         );
       } finally {
-        this.setLoading(false); 
+        this.setLoading(false);
       }
     },
 
     async updateTask(payload: UpdateTaskPayload): Promise<Task> {
-      this.setLoading(true); 
+      this.setLoading(true);
       const userId = localStorage.getItem("userId");
       if (!userId) {
-        this.setLoading(false); 
+        this.setLoading(false);
         throw new Error("User ID not found");
       }
 
@@ -221,10 +220,13 @@ export const useTaskStore = defineStore("tasks", {
       const ENDPOINT_URL = `/users/${userId}/tasks/${taskId}`;
       const authStore = useAuthStore();
 
-      const apiPayload: Partial<Omit<Task, 'taskId' | 'userId' | 'createdDate'>> = {};
+      const apiPayload: Partial<
+        Omit<Task, "taskId" | "userId" | "createdDate">
+      > = {};
 
       if (payload.title !== undefined) apiPayload.title = payload.title;
-      if (payload.description !== undefined) apiPayload.description = payload.description;
+      if (payload.description !== undefined)
+        apiPayload.description = payload.description;
       if (payload.dueDate !== undefined) apiPayload.dueDate = payload.dueDate;
 
       if (payload.status) {
@@ -238,7 +240,7 @@ export const useTaskStore = defineStore("tasks", {
         const response = await api.put<Task>(ENDPOINT_URL, apiPayload, {
           headers: { "Content-Type": "application/json" },
         });
-        await this.getTaskList({ forceRefresh: true }); 
+        await this.getTaskList({ forceRefresh: true });
         return response.data;
       } catch (error: any) {
         if (error.response?.status === 401) {
