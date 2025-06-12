@@ -7,8 +7,8 @@ export interface Task {
   taskId: string;
   title: string;
   description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; // Added URGENT
+  status: 'PENDING' | 'IN_PROGRESS' | 'DONE';
   dueDate: string;
   createdDate: string;
   userId: string;
@@ -17,8 +17,8 @@ export interface Task {
 export interface AddTaskPayload {
   title: string;
   description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  status: 'todo' | 'in_progress' | 'done';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; // Added URGENT
+  status: 'pending' | 'in_progress' | 'done'; // Keep lowercase here as it's the input payload
   dueDate: string;
 }
 
@@ -27,8 +27,8 @@ export interface UpdateTaskPayload {
   taskId: string;
   title?: string;
   description?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH'; 
-  status?: 'TODO' | 'IN_PROGRESS' | 'DONE'; 
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'; 
+  status?: 'PENDING' | 'IN_PROGRESS' | 'DONE'; 
   dueDate?: string;
 }
 
@@ -41,6 +41,7 @@ export interface DeleteTaskPayload {
 interface TaskStoreState {
   lastFetch: number | null;
   tasks: Task[];
+  isLoading: boolean; 
 }
 
 
@@ -48,6 +49,7 @@ export const useTaskStore = defineStore("tasks", {
   state: (): TaskStoreState => ({
     lastFetch: null,
     tasks: [],
+    isLoading: false, 
   }),
   getters: {
     getAllTasks(state): Task[] {
@@ -67,6 +69,9 @@ export const useTaskStore = defineStore("tasks", {
   },
 
   actions: {
+    setLoading(status: boolean) { 
+      this.isLoading = status;
+    },
     setFetchTimestamp(): void {
       this.lastFetch = new Date().getTime();
     },
@@ -85,8 +90,10 @@ export const useTaskStore = defineStore("tasks", {
         return;
       }
 
+      this.setLoading(true); 
       const userId = localStorage.getItem("userId");
       if (!userId) {
+        this.setLoading(false); 
         throw new Error("User ID not found");
       }
 
@@ -94,7 +101,7 @@ export const useTaskStore = defineStore("tasks", {
       const authStore = useAuthStore();
 
       try {
-        const response = await api.get<Task[]>(ENDPOINT_URL); 
+        const response = await api.get<Task[]>(ENDPOINT_URL);
         const responseData = response.data;
         this.$patch({
           tasks: responseData.map((taskData): Task => ({
@@ -110,7 +117,7 @@ export const useTaskStore = defineStore("tasks", {
         });
 
         this.setFetchTimestamp();
-      } catch (error: any) { // Tipizzazione dell'errore
+      } catch (error: any) {
         if (error.response?.status === 401) {
           authStore.logout();
         }
@@ -126,12 +133,16 @@ export const useTaskStore = defineStore("tasks", {
             error.message ||
             "Unexpected error occurred"
         );
+      } finally {
+        this.setLoading(false); 
       }
     },
 
     async addTask(payload: AddTaskPayload): Promise<Task> {
+      this.setLoading(true); 
       const userId = localStorage.getItem("userId");
       if (!userId) {
+        this.setLoading(false); 
         throw new Error("User ID not found");
       }
 
@@ -140,17 +151,17 @@ export const useTaskStore = defineStore("tasks", {
       const task = {
         ...payload,
         userId,
-        status: payload.status.toUpperCase() as Task['status'], 
-        priority: payload.priority.toUpperCase() as Task['priority'], 
+        status: payload.status.toUpperCase() as Task['status'],
+        priority: payload.priority.toUpperCase() as Task['priority'],
       };
       try {
         console.log("Sending task:", task);
-        const response = await api.post<Task>(ENDPOINT_URL, task, { 
+        const response = await api.post<Task>(ENDPOINT_URL, task, {
           headers: { "Content-Type": "application/json" },
         });
-        await this.getTaskList({ forceRefresh: true });
+        await this.getTaskList({ forceRefresh: true }); 
         return response.data;
-      } catch (error: any) { // Tipizzazione dell'errore
+      } catch (error: any) {
         console.error("Error response:", error.response?.data);
         if (error.response?.status === 401) {
           authStore.logout();
@@ -160,11 +171,15 @@ export const useTaskStore = defineStore("tasks", {
             error.message ||
             "Couldn't create the task"
         );
+      } finally {
+        this.setLoading(false); // Always reset loading
       }
     },
     async deleteTask(payload: DeleteTaskPayload): Promise<void> {
+      this.setLoading(true); // Set loading to true
       const userId = localStorage.getItem("userId");
       if (!userId) {
+        this.setLoading(false); // Reset loading on error
         throw new Error("User ID not found");
       }
 
@@ -174,8 +189,8 @@ export const useTaskStore = defineStore("tasks", {
       try {
         console.log("Deleting task with ID:", payload.taskId);
         await api.delete(ENDPOINT_URL);
-        await this.getTaskList({ forceRefresh: true });
-      } catch (error: any) { // Tipizzazione dell'errore
+        await this.getTaskList({ forceRefresh: true }); 
+      } catch (error: any) {
         console.error("Delete error:", error.response?.data);
         if (error.response?.status === 401) {
           authStore.logout();
@@ -189,12 +204,16 @@ export const useTaskStore = defineStore("tasks", {
             error.message ||
             "Couldn't delete the task"
         );
+      } finally {
+        this.setLoading(false); 
       }
     },
 
     async updateTask(payload: UpdateTaskPayload): Promise<Task> {
+      this.setLoading(true); 
       const userId = localStorage.getItem("userId");
       if (!userId) {
+        this.setLoading(false); 
         throw new Error("User ID not found");
       }
 
@@ -202,24 +221,26 @@ export const useTaskStore = defineStore("tasks", {
       const ENDPOINT_URL = `/users/${userId}/tasks/${taskId}`;
       const authStore = useAuthStore();
 
-      const task: Partial<Omit<Task, 'taskId' | 'userId' | 'createdDate'>> = { ...payload };
-      delete (task as any).taskId; // Rimuove taskId se l'API PUT non lo richiede nel body
-      delete (task as any).userId; // Rimuove userId se l'API PUT non lo richiede nel body
+      const apiPayload: Partial<Omit<Task, 'taskId' | 'userId' | 'createdDate'>> = {};
 
-      if (task.status) {
-        task.status = task.status.toUpperCase() as Task['status'];
+      if (payload.title !== undefined) apiPayload.title = payload.title;
+      if (payload.description !== undefined) apiPayload.description = payload.description;
+      if (payload.dueDate !== undefined) apiPayload.dueDate = payload.dueDate;
+
+      if (payload.status) {
+        apiPayload.status = payload.status;
       }
-      if (task.priority) {
-        task.priority = task.priority.toUpperCase() as Task['priority'];
+      if (payload.priority) {
+        apiPayload.priority = payload.priority;
       }
 
       try {
-        const response = await api.put<Task>(ENDPOINT_URL, task, { // Tipizzazione della risposta
+        const response = await api.put<Task>(ENDPOINT_URL, apiPayload, {
           headers: { "Content-Type": "application/json" },
         });
-        await this.getTaskList({ forceRefresh: true });
+        await this.getTaskList({ forceRefresh: true }); 
         return response.data;
-      } catch (error: any) { // Tipizzazione dell'errore
+      } catch (error: any) {
         if (error.response?.status === 401) {
           authStore.logout();
         }
@@ -228,6 +249,8 @@ export const useTaskStore = defineStore("tasks", {
             error.message ||
             "Couldn't update the task"
         );
+      } finally {
+        this.setLoading(false); // Always reset loading
       }
     },
   },
