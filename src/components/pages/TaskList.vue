@@ -4,12 +4,13 @@
       <v-row justify="space-evenly">
         <Draggable
           v-model="tasks"
-          item-key="id"
+          item-key="taskId"
           handle=".drag-handle"
           class="d-flex flex-wrap"
+          :animation="200"
         >
           <template #item="{ element: task }">
-            <v-col :cols="columns">
+            <v-col :cols="columns" _key=""task.taskId>
               <base-task
                 :taskId="task.id"
                 :title="task.title"
@@ -143,7 +144,7 @@
 <script lang="ts" setup>
 import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
-import { shallowRef, ref, computed, watch } from "vue"; // Importa 'watch'
+import { shallowRef, ref, computed, watch } from "vue"; 
 
 interface Task {
   id: string;
@@ -164,7 +165,6 @@ const display = useDisplay();
 const dateMenu = ref(false); 
 const datePickerValue = ref<Date | null>(null); 
 
-// --- Computed Properties ---
 const columns = computed(() => {
   switch (true) {
     case display.smAndDown.value:
@@ -214,7 +214,7 @@ const parseDate = (dateString: string): Date | null => {
 
 const tasks = ref<Task[]>([
   {
-    id: "task1",
+    id: "task_1",
     title: "TASK VUETIFY 1",
     priority: "LOW",
     status: "PENDING",

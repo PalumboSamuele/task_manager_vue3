@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import UserAuth from "../components/pages/UserAuth.vue";
 // import NotFound from "./components/pages/NotFound.vue";
-import TaskList from "@/components/pages/TaskList.vue";
+import MainPage from "@/components/pages/MainPage.vue";
 import SignUp from "@/components/pages/SignUp.vue";
 
 const routes = [
@@ -17,7 +17,7 @@ const routes = [
   },
   {
     path: "/users/:userId/tasks/",
-    component: TaskList,
+    component: MainPage,
     meta: { requiresAuth: true },
     props: true,
   },

@@ -9,7 +9,7 @@
   >
     <template #title>
       <div class="d-flex justify-space-between">
-        <div class="d-block text-truncate text-grey-darken-3">{{ title }}</div>
+        <div class="d-block text-truncate text-grey-darken-4">{{ title }}</div>
         <v-icon
           class="drag-handle mr-2 cursor-grab"
           icon="mdi-drag-variant"
@@ -113,7 +113,7 @@ const priorityColor = computed(() => {
     case "HIGH":
       return "red-lighten-1";
     case "URGENT":
-      return "red-darken-3";
+      return "purple-lighten-1";
     default:
       return "white";
   }

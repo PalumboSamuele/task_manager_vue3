@@ -11,7 +11,7 @@ const PUBLIC_ENDPOINTS = ["/auth/login", "/auth/register"];
 // Interceptor della richiesta
 api.interceptors.request.use(
   (config) => {
-    const requestUrl = config.url || ""; 
+    const requestUrl = config.url || "";
 
     // Se l'URL è tra quelli pubblici, non aggiunge l'Authorization header
     const isPublic = PUBLIC_ENDPOINTS.some((path) => requestUrl.includes(path));
