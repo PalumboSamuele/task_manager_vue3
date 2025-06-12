@@ -5,6 +5,7 @@
     :class="[`bg-${priorityColor}`]"
     rounded="xl"
     hover
+    @click.stop="emitView"
   >
     <template #title>
       <div class="d-flex justify-space-between">
@@ -62,8 +63,9 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import { useDisplay } from "vuetify";
-// import { useI18n } from 'vue-i18n'
+import { defineEmits, defineProps } from "vue";
 
+// import { useI18n } from 'vue-i18n'
 // const { locale, t } = useI18n()
 
 const display = useDisplay();
