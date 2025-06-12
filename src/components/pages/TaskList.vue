@@ -2,8 +2,21 @@
   <div :class="{ 'blurred-background': dialog }">
     <v-container fluid>
       <v-row justify="space-evenly">
+        <v-col cols="12" class="text-center">
+          <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
+          <h3 class="text-h6 mt-3">Nessuna task trovata.</h3>
+          <p>Inizia aggiungendo una nuova task!</p>
+          <v-btn
+            class="mt-4"
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="addTask"
+          >
+            Aggiungi Task
+          </v-btn>
+        </v-col>
         <Draggable
-          v-model="tasks"
+          v-model="localTasks"
           item-key="taskId"
           handle=".drag-handle"
           class="d-flex flex-wrap"
@@ -30,10 +43,7 @@
     </v-container>
 
     <div class="pa-4 text-center">
-      <v-dialog
-        v-model="dialog"
-        max-width="600"
-      >
+      <v-dialog v-model="dialog" max-width="600">
         <v-card icon="fa:fas fa-edit" :title="dialogTitle">
           <v-card-text v-if="selectedTask">
             <v-row dense>
@@ -100,7 +110,6 @@
                   ></v-date-picker>
                 </v-menu>
               </v-col>
-
             </v-row>
             <small class="text-caption text-medium-emphasis"
               >* indica campo obbligatorio</small
@@ -144,63 +153,100 @@
 <script lang="ts" setup>
 import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
-import { shallowRef, ref, computed, watch } from "vue"; 
+import { shallowRef, ref, computed, watch, onMounted } from "vue";
+import {
+  useTaskStore,
+  type Task,
+  type AddTaskPayload,
+  type UpdateTaskPayload,
+} from "../stores/tasks/tasksStore";
+import BaseTask from "../ui/BaseTask.vue";
 
-interface Task {
-  id: string;
-  title: string;
-  priority: string;
-  status: string;
-  description: string;
-  dueDate: string; 
-  createdDate: string;
-}
+const taskStore = useTaskStore();
 
-const dialog = shallowRef(false); 
-const selectedTask = ref<Task | null>(null); 
-const isViewMode = ref(false); 
+const dialog = shallowRef(false);
+const selectedTask = ref<Partial<Task>>({
+  taskId: undefined,
+  title: "",
+  description: "",
+  priority: "LOW",
+  status: "PENDING",
+  dueDate: "",
+});
+const isViewMode = ref(false);
+const modalMode = ref<"create" | "edit" | "view">("create");
 
-const display = useDisplay(); 
+const dateMenu = ref(false);
+const datePickerValue = ref<Date | null>(null);
 
-const dateMenu = ref(false); 
-const datePickerValue = ref<Date | null>(null); 
-
+const display = useDisplay();
 const columns = computed(() => {
   switch (true) {
     case display.smAndDown.value:
-      return 7; 
-    case display.md.value:
-      return 5; 
-    case display.lgAndUp.value:
-      return 4; 
-    default:
       return 12; 
+    case display.md.value:
+      return 6; 
+    case display.lgAndUp.value:
+      return 4;
+    default:
+      return 12;
   }
 });
 
-const dialogTitle = computed(() => {
-  return isViewMode.value ? "Dettagli Task" : "Modifica Task";
+const localTasks = computed<Task[]>({
+  get() {
+    return taskStore.getAllTasks;
+  },
+  set(newValue: Task[]) {
+    taskStore.updateTasks(newValue);
+  },
 });
 
-// Funzione per formattare un oggetto Date (o null) in una stringa 'DD-MM-YYYY'
+const dialogTitle = computed(() => {
+  if (modalMode.value === "view") {
+    return "Dettagli Task";
+  } else if (modalMode.value === "edit") {
+    return "Modifica Task";
+  } else {
+    return "Crea Nuova Task";
+  }
+});
+
+const statusOptions = [
+  { value: "TODO", text: "DA FARE" },
+  { value: "IN_PROGRESS", text: "IN CORSO" },
+  { value: "DONE", text: "COMPLETATA" },
+];
+
+const priorityOptions = [
+  { value: "LOW", text: "BASSA" },
+  { value: "MEDIUM", text: "MEDIA" },
+  { value: "HIGH", text: "ALTA" },
+  { value: "URGENT", text: "URGENTE" },
+];
+
 const formatDate = (date: Date | null): string => {
   if (!date) return "";
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // I mesi sono 0-indexed
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 };
 
-// Funzione per parsare una stringa 'DD-MM-YYYY' in un oggetto Date (o null)
 const parseDate = (dateString: string): Date | null => {
   if (!dateString) return null;
+
   const parts = dateString.split("-");
-  if (parts.length === 3) {
+  if (
+    parts.length === 3 &&
+    !isNaN(parseInt(parts[0])) &&
+    !isNaN(parseInt(parts[1])) &&
+    !isNaN(parseInt(parts[2]))
+  ) {
     const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Mesi 0-indexed
+    const month = parseInt(parts[1], 10) - 1;
     const year = parseInt(parts[2], 10);
     const date = new Date(year, month, day);
-    // Valida per evitare date invalide (es. 31 febbraio)
     if (
       date.getFullYear() === year &&
       date.getMonth() === month &&
@@ -209,72 +255,26 @@ const parseDate = (dateString: string): Date | null => {
       return date;
     }
   }
+
+  try {
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (e) {}
   return null;
 };
-
-const tasks = ref<Task[]>([
-  {
-    id: "task_1",
-    title: "TASK VUETIFY 1",
-    priority: "LOW",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-  {
-    id: "task_2",
-    title: "TASK VUETIFY 2",
-    priority: "MEDIUM",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-  {
-    id: "task_3",
-    title: "TASK VUETIFY 3",
-    priority: "HIGH",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-  {
-    id: "task_4",
-    title: "TASK VUETIFY 4",
-    priority: "URGENT",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-  {
-    id: "task_5",
-    title: "TASK VUETIFY 5",
-    priority: "LOW",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-  {
-    id: "task_6",
-    title: "TASK VUETIFY 6",
-    priority: "MEDIUM",
-    status: "PENDING",
-    description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
-    dueDate: "12-03-2026",
-    createdDate: "10-06-2025",
-  },
-]);
-
 
 watch(
   () => selectedTask.value?.dueDate,
   (newVal) => {
-    if (selectedTask.value && newVal !== undefined) {
-      datePickerValue.value = parseDate(newVal);
+    if (newVal) {
+      const parsedDate = parseDate(newVal);
+      if (parsedDate) {
+        datePickerValue.value = parsedDate;
+      } else {
+        datePickerValue.value = null;
+      }
     } else {
       datePickerValue.value = null;
     }
@@ -284,62 +284,138 @@ watch(
 
 const updateDueDate = (newDate: Date | null) => {
   if (selectedTask.value) {
-    selectedTask.value.dueDate = formatDate(newDate); 
+    selectedTask.value.dueDate = formatDate(newDate);
   }
-  dateMenu.value = false; 
+  dateMenu.value = false;
 };
 
 const viewTask = (taskId: string) => {
-  const task = tasks.value.find((t) => t.id === taskId);
+  modalMode.value = "view";
+  const task = taskStore.taskById(taskId);
   if (task) {
-    selectedTask.value = { ...task }; 
-    isViewMode.value = true; 
-    dialog.value = true; 
+    selectedTask.value = { ...task };
+    selectedTask.value.dueDate = formatDate(parseDate(task.dueDate));
+    isViewMode.value = true;
+    dialog.value = true;
   }
 };
 
 const editTask = (taskId: string) => {
-  const task = tasks.value.find((t) => t.id === taskId);
+  modalMode.value = "edit";
+  const task = taskStore.taskById(taskId);
   if (task) {
-    selectedTask.value = { ...task }; 
-    isViewMode.value = false; 
-    dialog.value = true; 
+    selectedTask.value = { ...task };
+    selectedTask.value.dueDate = formatDate(parseDate(task.dueDate));
+    dialog.value = true;
   }
 };
 
 const enableEditMode = () => {
-  isViewMode.value = false; 
+  modalMode.value = "edit";
+  isViewMode.value = false;
 };
 
-const deleteTask = (taskId: string) => {
+const deleteTask = async (taskId: string) => {
   if (confirm("Sei sicuro di voler eliminare questa task?")) {
-    tasks.value = tasks.value.filter((t) => t.id !== taskId);
+    try {
+      await taskStore.deleteTask({ taskId });
+    } catch (error: any) {
+      console.error("Errore durante l'eliminazione della task:", error);
+    }
   }
+};
+
+const addTask = () => {
+  modalMode.value = "create";
+  isViewMode.value = false;
+  selectedTask.value = {
+    taskId: undefined,
+    title: "",
+    description: "",
+    priority: "LOW",
+    status: "PENDING",
+    dueDate: "",
+  };
+  datePickerValue.value = null;
+  dialog.value = true;
 };
 
 const closeDialog = () => {
-  dialog.value = false; 
-  selectedTask.value = null;
-  datePickerValue.value = null; 
-  isViewMode.value = false; 
+  dialog.value = false;
+  selectedTask.value = {
+    taskId: undefined,
+    title: "",
+    description: "",
+    priority: "LOW",
+    status: "PENDING",
+    dueDate: "",
+  };
+  datePickerValue.value = null;
+  isViewMode.value = false;
+  modalMode.value = "create";
 };
 
-const saveTask = () => {
-  if (selectedTask.value) {
-    const index = tasks.value.findIndex((t) => t.id === selectedTask.value!.id);
-    if (index !== -1) {
-      tasks.value[index] = { ...selectedTask.value }; 
+const saveTask = async () => {
+  if (
+    !selectedTask.value.title ||
+    !selectedTask.value.description ||
+    !selectedTask.value.priority ||
+    !selectedTask.value.status ||
+    !selectedTask.value.dueDate
+  ) {
+    return;
+  }
+
+  let formattedDateForApi: string | null = null;
+  if (selectedTask.value.dueDate) {
+    const parsed = parseDate(selectedTask.value.dueDate);
+    if (parsed) {
+      formattedDateForApi = parsed.toISOString();
+    } else {
+      return;
     }
   }
-  closeDialog(); 
+
+  try {
+    if (modalMode.value === "create") {
+      const payload: AddTaskPayload = {
+        title: selectedTask.value.title,
+        description: selectedTask.value.description,
+        priority: selectedTask.value.priority as AddTaskPayload["priority"],
+        status:
+          selectedTask.value.status.toLowerCase() as AddTaskPayload["status"],
+        dueDate: formattedDateForApi || "",
+      };
+      await taskStore.addTask(payload);
+    } else if (modalMode.value === "edit") {
+      const payload: UpdateTaskPayload = {
+        taskId: selectedTask.value.taskId!,
+        title: selectedTask.value.title,
+        description: selectedTask.value.description,
+        priority: selectedTask.value.priority as UpdateTaskPayload["priority"],
+        status: selectedTask.value.status as UpdateTaskPayload["status"],
+        dueDate: formattedDateForApi || "",
+      };
+      await taskStore.updateTask(payload);
+    }
+    closeDialog();
+  } catch (error: any) {
+    console.error("Errore durante il salvataggio della task:", error);
+  }
 };
+
+onMounted(async () => {
+  try {
+    await taskStore.getTaskList();
+  } catch (err: any) {
+    console.error("Failed to fetch tasks:", err.message);
+  }
+});
 </script>
 
 <style scoped>
 .blurred-background {
-  filter: blur(2px); 
-  transition: filter 0.3s ease-in-out; 
+  filter: blur(2px);
+  transition: filter 0.3s ease-in-out;
 }
-
-
 </style>
