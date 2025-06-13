@@ -42,13 +42,13 @@
             class="rounded-pill"
             @click.stop="emitEdit"
           >
-            <v-icon icon="mdi-pencil" start></v-icon>
             <span class="button-text">Modifica</span>
+            <v-icon icon="mdi-pencil" end></v-icon>
           </v-btn>
 
           <v-btn color="error" class="rounded-pill" @click.stop="emitDelete">
-            <v-icon icon="mdi-delete"></v-icon>
-            <span class="button-text">&nbsp; Elimina</span>
+            <span class="button-text">Elimina</span>
+            <v-icon icon="mdi-delete" end></v-icon>
           </v-btn>
         </div>
         <p class="mt-3 text-white text-caption">Creato il {{ createdDate }}</p>

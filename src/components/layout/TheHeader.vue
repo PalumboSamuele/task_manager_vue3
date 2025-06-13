@@ -28,7 +28,7 @@
           color="white"
           class="ml-2"
           :to="'/login'"
-          prepend-icon="mdi-account-plus"
+          append-icon="mdi-account-plus"
         >
           Login
         </v-btn>
@@ -37,7 +37,7 @@
           color="white"
           class="ml-2"
           :to="'/signup'"
-          prepend-icon="mdi-account-plus"
+          append-icon="mdi-account-plus"
         >
           Sign Up
         </v-btn>
@@ -49,7 +49,7 @@
           color="white"
           class="ml-2"
           @click="logout"
-          prepend-icon="mdi-login"
+          append-icon="mdi-login"
         >
           Logout
         </v-btn>
@@ -62,14 +62,14 @@
     <v-list v-if="!isLoggedIn">
 
       <v-list-item v-if="!isLoggedIn" :to="'/login'">
-        <template #prepend>
+        <template #append>
           <v-icon>mdi-login</v-icon>
         </template>
         <v-list-item-title>Login</v-list-item-title>
       </v-list-item>
 
       <v-list-item :to="'/signup'">
-        <template #prepend>
+        <template #append>
           <v-icon>mdi-account-plus</v-icon>
         </template>
         <v-list-item-title>Sign Up</v-list-item-title>
@@ -78,7 +78,7 @@
 
     <v-list v-if="isLoggedIn">
       <v-list-item :to="'/'" @click="logout">
-        <template #prepend>
+        <template #append>
           <v-icon>mdi-logout</v-icon>
         </template>
         <v-list-item-title>Logout</v-list-item-title>
