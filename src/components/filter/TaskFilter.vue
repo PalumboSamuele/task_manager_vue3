@@ -237,17 +237,6 @@ const activeFilters = computed(() => {
   );
 });
 
-// const filteredTasks = computed(() => {
-//   // Per semplicità, ritorna tutte le task
-//   return tasks.value;
-// });
-
-const sortIcon = computed(() => {
-  if (sortingMethod.value.ascending === true) return "mdi-arrow-up";
-  if (sortingMethod.value.ascending === false) return "mdi-arrow-down";
-  return null;
-});
-
 //----------------------WATCHES------------------------
 // Sincronizza showExpand con expand, ma con delay all'abbassamento
 watch(expand, (newVal, oldVal) => {
