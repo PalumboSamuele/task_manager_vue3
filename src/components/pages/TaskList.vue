@@ -210,7 +210,6 @@
 <script lang="ts" setup>
 import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
-import { shallowRef, ref, computed, watch, onMounted } from "vue";
 import {
   useTaskStore,
   type Task,
@@ -221,7 +220,6 @@ import { parse, format, isValid, startOfToday } from "date-fns";
 
 const today = startOfToday();
 const display = useDisplay();
-
 const taskStore = useTaskStore();
 
 //-----------------REACTIVE VARIABLES--------------------
@@ -254,10 +252,11 @@ const snackbar = ref(false);
 const snackbarMessage = ref("");
 const snackbarColor = ref("success");
 
-const display = useDisplay();
-const columns = computed(() =>
-  display.smAndDown.value ? 12 : display.md.value ? 6 : 4
-);
+const confirmDialog = ref(false);
+const confirmTitle = ref("");
+const confirmMessage = ref("");
+const confirmCallback = ref<(() => Promise<void>) | null>(null);
+const loadingConfirm = ref(false);
 
 //----------------------COMPUTED------------------------
 
@@ -273,7 +272,6 @@ const columns = computed(() => {
       return 12;
   }
 });
-
 const dialogTitle = computed(() =>
   modalMode.value === "view"
     ? "Dettagli Task"
@@ -423,7 +421,6 @@ const applySort = (sortOptions: { field: string; order: string }) => {
 
   localTasks.value = tasksToSort;
 };
-
 
 const showSnackbar = (message: string, color = "success") => {
   snackbarMessage.value = message;
@@ -626,7 +623,6 @@ defineExpose({
   addTask,
   applyFilters,
   applySort,
-
 });
 </script>
 
