@@ -1,6 +1,5 @@
 <template>
   <div :class="{ 'blurred-background': dialog || confirmDialog }">
-    <v-container fluid>
       <v-row justify="space-evenly">
         <v-col cols="12" class="text-center">
           <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
@@ -35,7 +34,6 @@
           </template>
         </Draggable>
       </v-row>
-    </v-container>
 
     <v-dialog v-model="dialog" max-width="600">
       <v-card>
@@ -145,29 +143,37 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="confirmDialog" max-width="400" >
-      <v-card class="rounded-xl elevation-2 pa-4">
-        <v-card-title class="text-h6">{{ confirmTitle }}</v-card-title>
-        <v-card-text>{{ confirmMessage }}</v-card-text>
+    <v-dialog v-model="confirmDialog" max-width="400">
+      <v-card class="pa-4 rounded-xl">
+        <v-card-title class="d-flex align-center text-h6">
+          <v-icon class="me-2" color="primary">mdi-help-circle-outline</v-icon>
+          {{ confirmTitle }}
+        </v-card-title>
+        <v-card-text class="text-body-1 text-high-emphasis">
+          {{ confirmMessage }}
+        </v-card-text>
 
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            text
-            color="grey"
-            @click="cancelConfirm"
-            :disabled="loadingConfirm"
-          >
-            Annulla
-          </v-btn>
-          <v-btn
-            text
-            color="primary"
-            @click="confirmAction"
-            :loading="loadingConfirm"
-          >
-            Conferma
-          </v-btn>
+          <v-card-actions class="justify-end pt-4">
+            <v-btn
+              variant="elevated"
+              color="error"
+              @click="cancelConfirm"
+              :disabled="loadingConfirm"
+            >
+              Annulla
+            </v-btn>
+            <v-btn
+              variant="elevated"
+              color="light-blue-accent-3"
+              @click="confirmAction"
+              :loading="loadingConfirm"
+              class="ms-2"
+            >
+              Conferma
+            </v-btn>
+          </v-card-actions>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -338,7 +344,7 @@ const requestSaveEditConfirm = () => {
         !task.status ||
         !task.dueDate
       ) {
-        showSnackbar("Compila tutti i campi obbligatori", "error");
+        showSnackbar("Compila tutti i campi ", "error");
         loadingConfirm.value = false;
         return;
       }
@@ -383,7 +389,7 @@ const saveTaskDirectly = async () => {
     !task.status ||
     !task.dueDate
   ) {
-    showSnackbar("Compila tutti i campi obbligatori", "error");
+    showSnackbar("Compila tutti i campi", "error");
     return;
   }
 

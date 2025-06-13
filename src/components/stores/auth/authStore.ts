@@ -44,7 +44,6 @@ export const useAuthStore = defineStore("auth", {
         });
         return response.data;
       } catch (error: unknown) {
-        // 7. Tipizza l'errore come 'unknown' e fai un type assertion
         let message = "Failed to register. Please check your data.";
         if (
           error &&
@@ -78,7 +77,6 @@ export const useAuthStore = defineStore("auth", {
       this.userId = responseData.userDto.userId;
       this.firstVisit = false;
 
-      // 9. Assicurati che i valori siano stringhe prima di salvarli in localStorage
       localStorage.setItem("token", this.token);
       localStorage.setItem("userId", this.userId);
       localStorage.setItem("expiration", expiration.toString()); // Salva come stringa
@@ -88,12 +86,10 @@ export const useAuthStore = defineStore("auth", {
       }, expiresIn);
     },
     tryLogin(): boolean {
-      // 10. Tipizza il ritorno della funzione
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
       const expiration = localStorage.getItem("expiration");
 
-      // 11. Controlla che expiration non sia null prima di convertirlo
       const parsedExpiration = expiration ? +expiration : 0; // Converte in numero
       const expiresIn = parsedExpiration - new Date().getTime();
 
