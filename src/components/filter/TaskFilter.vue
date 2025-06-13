@@ -3,6 +3,15 @@
     <!-- Sidebar sticky -->
     <v-col cols="12" md="3">
       <div class="fixed-sidebar">
+        <v-btn
+          class="mt-4"
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="addTaskEmit"
+          block
+        >
+          Aggiungi Task
+        </v-btn>
         <v-card class="mt-4" elevation="2">
           <v-card-title>Filtri</v-card-title>
           <v-divider></v-divider>
@@ -34,7 +43,7 @@
                   <v-col cols="4">
                     <span class="font-weight-black">Data d'inizio:</span>
                   </v-col>
-                  <v-col cols="auto">
+                  <v-col cols="8">
                     <v-menu
                       v-model="menuStart"
                       :close-on-content-click="false"
@@ -46,6 +55,7 @@
                           variant="outlined"
                           :color="dateStart ? 'light-blue-accent-3' : ''"
                           prepend-icon="mdi-calendar"
+                          block
                         >
                           {{ dateStart ? formatDate(dateStart) : "Seleziona" }}
                         </v-btn>
@@ -65,7 +75,7 @@
                   <v-col cols="4">
                     <span class="font-weight-black">Data di termine:</span>
                   </v-col>
-                  <v-col cols="auto">
+                  <v-col cols="8">
                     <v-menu
                       v-model="menuEnd"
                       :close-on-content-click="false"
@@ -77,18 +87,29 @@
                           variant="outlined"
                           :color="dateEnd ? 'light-blue-accent-3' : ''"
                           prepend-icon="mdi-calendar"
+                          block
                         >
                           {{ dateEnd ? formatDate(dateEnd) : "Seleziona" }}
                         </v-btn>
                       </template>
                       <v-date-picker
                         v-model="dateEnd"
-                        :min="dateStart"
+                        :min="dateStart || today"
                         @update:model-value="onDateChange('end')"
                         color="light-blue-accent-3"
                       />
                     </v-menu>
                   </v-col>
+                  <v-btn
+                    variant="outlined"
+                    color="red"
+                    prepend-icon="mdi-delete-outline"
+                    class="mb-2 mt-4"
+                    block
+                    @click.stop="clearDates"
+                  >
+                    Cancella date
+                  </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
@@ -185,7 +206,32 @@ import { parse, isValid, format } from "date-fns";
 import { startOfToday } from "date-fns";
 
 const today = startOfToday();
-const emit = defineEmits(["change-filter", "change-sort"]);
+const emit = defineEmits(["change-filter", "change-sort", "add-task"]);
+type PriorityMapping = {
+  BASSA: "LOW";
+  MEDIA: "MEDIUM";
+  ALTA: "HIGH";
+  URGENTE: "URGENT";
+};
+
+type StatusMapping = {
+  "IN ATTESA": "PENDING";
+  "IN CORSO": "IN_PROGRESS";
+  COMPLETATA: "COMPLETED";
+};
+
+const priorityMapping: PriorityMapping = {
+  BASSA: "LOW",
+  MEDIA: "MEDIUM",
+  ALTA: "HIGH",
+  URGENTE: "URGENT",
+};
+
+const statusMapping: StatusMapping = {
+  "IN ATTESA": "PENDING",
+  "IN CORSO": "IN_PROGRESS",
+  COMPLETATA: "COMPLETED",
+};
 
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
@@ -267,6 +313,10 @@ watch(
 );
 
 //----------------------METHODS------------------------
+function addTaskEmit() {
+  emit("add-task");
+}
+
 function getPriorityColor(priority: string): string {
   switch (priority.toUpperCase()) {
     case "LOW":
@@ -308,6 +358,11 @@ function clearFilters() {
   sortOrder.value = "";
   emit("change-sort", { field: "", order: "" });
   emitFilters();
+}
+
+function clearDates() {
+  dateStart.value = null;
+  dateEnd.value = null;
 }
 
 function toggleSort(field: string) {
@@ -354,13 +409,24 @@ function toggleSort(field: string) {
   emitFilters();
 }
 
+const mapPriority = (label: string): string => {
+  const key = label.toUpperCase() as keyof PriorityMapping;
+  return priorityMapping[key] || label;
+};
+
+const mapStatus = (label: string): string => {
+  const key = label.toUpperCase() as keyof StatusMapping;
+  return statusMapping[key] || label;
+};
+
 function emitFilters() {
   const selectedStatuses = statuses.value
     .filter((s) => s.selected)
-    .map((s) => s.label);
+    .map((s) => mapStatus(s.label));
+
   const selectedPriorities = priorities.value
     .filter((p) => p.selected)
-    .map((p) => p.label);
+    .map((p) => mapPriority(p.label));
 
   emit("change-filter", {
     statuses: selectedStatuses,
@@ -415,10 +481,10 @@ const getDateOnly = (str: string | null): string | undefined => {
   top: calc(var(--v-layout-top, 0px) - 1px);
   left: 0;
   width: 25%;
-  padding: 16px;
+  padding: 14px;
   height: calc(100vh - var(--v-layout-top, 0px) - 16px);
   overflow-y: auto;
-  background-color: white;
+  background-color: transparent;
   z-index: 10;
 }
 
