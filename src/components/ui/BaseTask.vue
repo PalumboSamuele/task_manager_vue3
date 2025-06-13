@@ -3,7 +3,7 @@
     variant="outlined"
     class="my-3 d-flex flex-column"
     :class="[`bg-${priorityColor}`]"
-    rounded="xl"
+    rounded="lg"
     hover
     @click.stop="emitView"
   >

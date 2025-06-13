@@ -1,39 +1,55 @@
 <template>
   <div :class="{ 'blurred-background': dialog || confirmDialog }">
-      <v-row justify="space-evenly">
-        <v-col cols="12" class="text-center">
-          <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
-          <h3 class="text-h6 mt-3">Task non trovate</h3>
-          <p>Inizia ad aggiungere una nuova task!</p>
-          <v-btn
-            class="mt-4"
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="addTask"
-          >
-            Aggiungi Task
-          </v-btn>
-        </v-col>
-
-        <Draggable
-          v-model="localTasks"
-          item-key="taskId"
-          handle=".drag-handle"
-          class="d-flex flex-wrap"3
-          :animation="200"
+    <v-row justify="space-evenly">
+      <v-col
+        cols="12"
+        v-if="originalTasks.length === 0 || localTasks.length === 0"
+        class="text-center mt-15"
+      >
+        <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
+        <h3 class="text-h6 mt-3">
+          {{
+            localTasks.length === 0 && originalTasks.length !== 0
+              ? "Nessuna task con queste caratteristiche è stata trovata"
+              : "Task non trovate"
+          }}
+        </h3>
+        <p>Inizia ad aggiungere una nuova task!</p>
+        <v-btn
+          class="mt-4"
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="addTask"
         >
-          <template #item="{ element: task }">
-            <v-col :cols="columns" :key="task.taskId">
-              <base-task
-                v-bind="task"
-                @callDelete="requestDeleteTask"
-                @editTask="editTask"
-                @viewTask="viewTask"
-              />
-            </v-col>
-          </template>
-        </Draggable>
-      </v-row>
+          Aggiungi Task
+        </v-btn>
+      </v-col>
+
+      <Draggable
+        v-model="localTasks"
+        item-key="taskId"
+        handle=".drag-handle"
+        class="d-flex flex-wrap w-100"
+        :animation="200"
+      >
+        <template #item="{ element: task }">
+          <v-col :cols="columns" :key="task.taskId">
+            <base-task
+              :taskId="task.taskId"
+              :title="task.title"
+              :description="task.description"
+              :status="task.status"
+              :priority="task.priority"
+              :dueDate="task.dueDate"
+              :createdDate="task.createdDate"
+              @callDelete="requestDeleteTask"
+              @editTask="editTask"
+              @viewTask="viewTask"
+            />
+          </v-col>
+        </template>
+      </Draggable>
+    </v-row>
 
     <v-dialog v-model="dialog" max-width="600">
       <v-card>
@@ -104,6 +120,7 @@
                 </template>
                 <v-date-picker
                   v-if="!isViewMode"
+                  :min="today"
                   v-model="datePickerValue"
                   color="deep-purple-accent-3"
                   @update:model-value="updateDueDate"
@@ -132,7 +149,7 @@
             :disabled="confirmDialog"
           />
           <v-btn
-            v-if="!isViewMode"
+            v-else
             color="light-blue-accent-4"
             text="Salva"
             variant="tonal"
@@ -200,10 +217,30 @@ import {
   type AddTaskPayload,
   type UpdateTaskPayload,
 } from "../stores/tasks/tasksStore";
-import BaseTask from "../ui/BaseTask.vue";
-import { parse, format, isValid } from "date-fns";
+import { parse, format, isValid, startOfToday } from "date-fns";
+
+const today = startOfToday();
+const display = useDisplay();
 
 const taskStore = useTaskStore();
+
+//-----------------REACTIVE VARIABLES--------------------
+
+// Aggiunta: Stato per i filtri attivi
+const activeFilters = ref({
+  statuses: [] as string[],
+  priorities: [] as string[],
+  dateRange: { start: "", end: "" },
+});
+
+// Stato per l'ordinamento corrente
+const currentSort = ref({
+  field: "",
+  order: "",
+});
+
+const originalTasks = ref<Task[]>([]); // Mantiene una copia delle task originali
+const localTasks = ref<Task[]>([]); // Task visualizzate (filtrate/ordinate)
 
 const dialog = shallowRef(false);
 const selectedTask = ref<Partial<Task>>({});
@@ -222,9 +259,19 @@ const columns = computed(() =>
   display.smAndDown.value ? 12 : display.md.value ? 6 : 4
 );
 
-const localTasks = computed<Task[]>({
-  get: () => taskStore.getAllTasks,
-  set: (tasks) => taskStore.updateTasks(tasks),
+//----------------------COMPUTED------------------------
+
+const columns = computed(() => {
+  switch (true) {
+    case display.smAndDown.value:
+      return 7;
+    case display.md.value:
+      return 5;
+    case display.lgAndUp.value:
+      return 4;
+    default:
+      return 12;
+  }
 });
 
 const dialogTitle = computed(() =>
@@ -235,11 +282,148 @@ const dialogTitle = computed(() =>
     : "Crea Nuova Task"
 );
 
-const confirmDialog = ref(false);
-const confirmTitle = ref("");
-const confirmMessage = ref("");
-const confirmCallback = ref<(() => Promise<void>) | null>(null);
-const loadingConfirm = ref(false);
+//----------------------WATCHES------------------------
+
+watch(
+  () => selectedTask.value?.dueDate,
+  (newVal) => {
+    datePickerValue.value = newVal ? parseDate(newVal) : null;
+  },
+  { immediate: true }
+);
+
+// Aggiorna le task locali quando cambiano quelle nello store
+watch(
+  () => taskStore.tasks,
+  (newTasks) => {
+    originalTasks.value = Array.isArray(newTasks) ? [...newTasks] : [];
+    // Riapplica filtri e ordinamento
+    applyFilters(activeFilters.value);
+    if (currentSort.value.field) {
+      applySort(currentSort.value);
+    }
+  },
+  { deep: true }
+);
+
+//----------------------METHODS------------------------
+
+// Inizializzazione
+onBeforeMount(async () => {
+  await taskStore.getTaskList({ forceRefresh: true });
+  originalTasks.value = [...taskStore.tasks];
+  localTasks.value = [...taskStore.tasks];
+});
+
+// Funzione per applicare i filtri
+const applyFilters = (filters: {
+  statuses?: string[];
+  priorities?: string[];
+  dueDateStart?: string | null;
+  dueDateEnd?: string | null;
+}) => {
+  let filteredTasks = [...originalTasks.value];
+
+  // Filtro per stato (case insensitive)
+  if (filters.statuses && filters.statuses.length > 0) {
+    filteredTasks = filteredTasks.filter((task) =>
+      filters.statuses?.some(
+        (status) => task.status.toUpperCase() === status.toUpperCase()
+      )
+    );
+  }
+
+  // Filtro per priorità (case insensitive)
+  if (filters.priorities && filters.priorities.length > 0) {
+    filteredTasks = filteredTasks.filter((task) =>
+      filters.priorities?.some(
+        (priority) => task.priority.toUpperCase() === priority.toUpperCase()
+      )
+    );
+  }
+
+  // Filtro per data di scadenza
+  if (filters.dueDateStart || filters.dueDateEnd) {
+    filteredTasks = filteredTasks.filter((task) => {
+      const taskDueDate = parseDate(task.dueDate);
+      if (!taskDueDate) return false;
+
+      const startDate = filters.dueDateStart
+        ? parseDate(filters.dueDateStart)
+        : null;
+      const endDate = filters.dueDateEnd ? parseDate(filters.dueDateEnd) : null;
+
+      return (
+        (!startDate || taskDueDate >= startDate) &&
+        (!endDate || taskDueDate <= endDate)
+      );
+    });
+  }
+
+  // Aggiorna lo stato dei filtri attivi
+  activeFilters.value = {
+    statuses: filters.statuses || [],
+    priorities: filters.priorities || [],
+    dateRange: {
+      start: filters.dueDateStart || "",
+      end: filters.dueDateEnd || "",
+    },
+  };
+
+  // Applica anche l'ordinamento corrente
+  if (currentSort.value.field) {
+    applySort(currentSort.value);
+  } else {
+    localTasks.value = filteredTasks;
+  }
+};
+
+// Funzione per applicare l'ordinamento
+const applySort = (sortOptions: { field: string; order: string }) => {
+  const { field, order } = sortOptions;
+  currentSort.value = { field, order };
+
+  if (!field || !order) {
+    // Se non c'è ordinamento, ripristina solo i filtri
+    applyFilters(activeFilters.value);
+    return;
+  }
+
+  // Crea una copia delle task attualmente filtrate
+  const tasksToSort = [...localTasks.value];
+
+  tasksToSort.sort((a, b) => {
+    // Ordinamento per priorità
+    if (field === "priority") {
+      const priorityOrder = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 };
+      // Converti le priorità in uppercase e assicurati che siano chiavi valide
+      const aPriorityKey =
+        a.priority.toUpperCase() as keyof typeof priorityOrder;
+      const bPriorityKey =
+        b.priority.toUpperCase() as keyof typeof priorityOrder;
+
+      const aPriority = priorityOrder[aPriorityKey] || 0;
+      const bPriority = priorityOrder[bPriorityKey] || 0;
+
+      return order === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    }
+
+    // Ordinamento per data di scadenza
+    if (field === "dueDate") {
+      const aDate = parseDate(a.dueDate) || new Date(0);
+      const bDate = parseDate(b.dueDate) || new Date(0);
+
+      return order === "asc"
+        ? aDate.getTime() - bDate.getTime()
+        : bDate.getTime() - aDate.getTime();
+    }
+
+    return 0;
+  });
+
+  localTasks.value = tasksToSort;
+};
+
 
 const showSnackbar = (message: string, color = "success") => {
   snackbarMessage.value = message;
@@ -437,18 +621,12 @@ const confirmAction = async () => {
   }
 };
 
-watch(
-  () => selectedTask.value?.dueDate,
-  (newVal) => {
-    datePickerValue.value = newVal ? parseDate(newVal) : null;
-  },
-  { immediate: true }
-);
+// Espone le funzioni per l'uso esterno
+defineExpose({
+  addTask,
+  applyFilters,
+  applySort,
 
-onMounted(() => {
-  taskStore
-    .getTaskList()
-    .catch((err) => console.error("Errore fetch tasks:", err));
 });
 </script>
 
