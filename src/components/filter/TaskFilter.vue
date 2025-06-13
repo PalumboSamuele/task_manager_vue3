@@ -1,12 +1,12 @@
 <template>
   <v-row align="start">
-    <!-- Sidebar sticky -->
+    <!-- Sidebar fixed -->
     <v-col cols="12" md="3">
       <div class="fixed-sidebar">
         <v-btn
           class="mt-4"
           color="primary"
-          prepend-icon="mdi-plus"
+          append-icon="mdi-plus"
           @click="addTaskEmit"
           block
         >
@@ -23,18 +23,16 @@
               :key="filterGroup.id"
               :title="filterGroup.title"
             >
-              <template #text>
-                <v-item-group>
-                  <v-item v-for="item in filterGroup.items" :key="item.id">
-                    <v-checkbox
-                      v-model="item.selected"
-                      :label="item.label"
-                      hide-details
-                      density="compact"
-                    ></v-checkbox>
-                  </v-item>
-                </v-item-group>
-              </template>
+              <v-expansion-panel-text>
+                <v-checkbox
+                  v-for="item in filterGroup.items"
+                  :key="item.id"
+                  v-model="item.selected"
+                  :label="item.label"
+                  hide-details
+                  density="compact"
+                ></v-checkbox>
+              </v-expansion-panel-text>
             </v-expansion-panel>
 
             <v-expansion-panel title="Data di scadenza">
@@ -54,7 +52,7 @@
                           v-bind="props"
                           variant="outlined"
                           :color="dateStart ? 'light-blue-accent-3' : ''"
-                          prepend-icon="mdi-calendar"
+                          append-icon="mdi-calendar"
                           block
                         >
                           {{ dateStart ? formatDate(dateStart) : "Seleziona" }}
@@ -86,7 +84,7 @@
                           v-bind="props"
                           variant="outlined"
                           :color="dateEnd ? 'light-blue-accent-3' : ''"
-                          prepend-icon="mdi-calendar"
+                          append-icon="mdi-calendar"
                           block
                         >
                           {{ dateEnd ? formatDate(dateEnd) : "Seleziona" }}
@@ -103,7 +101,7 @@
                   <v-btn
                     variant="outlined"
                     color="red"
-                    prepend-icon="mdi-delete-outline"
+                    append-icon="mdi-delete-outline"
                     class="mb-2 mt-4"
                     block
                     @click.stop="clearDates"
@@ -120,7 +118,9 @@
                 <v-row align="center" justify="start">
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    :color="
+                      sortingMethod[0].ascending !== null ? 'primary' : ''
+                    "
                     @click="toggleSort('dueDate')"
                     class="mb-2 mt-3"
                     block
@@ -140,7 +140,9 @@
                   </v-btn>
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    :color="
+                      sortingMethod[1].ascending !== null ? 'primary' : ''
+                    "
                     @click="toggleSort('priority')"
                     class="mb-2"
                     block
@@ -158,6 +160,16 @@
                       }}
                     </v-icon>
                   </v-btn>
+                  <v-btn
+                    variant="outlined"
+                    color="red"
+                    append-icon="mdi-arrow-u-left-top"
+                    class="mb-2 mt-10"
+                    block
+                    @click.stop="clearOrderings"
+                  >
+                    Resetta ordinamento
+                  </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
@@ -169,8 +181,16 @@
     <!-- Task list in slot -->
     <v-col cols="12" md="9">
       <v-expand-transition>
-        <v-card variant="flat" v-show="showExpand">
-          <v-chip-group column class="mt-2">
+        <v-card
+          variant="flat"
+          v-show="showExpand"
+          class="pl-4"
+          :class="{
+            'sticky-chip-group border-b-md': scrolling,
+            'mt-2': !scrolling,
+          }"
+        >
+          <v-chip-group column>
             <v-btn
               variant="outlined"
               color="red"
@@ -235,6 +255,7 @@ const statusMapping: StatusMapping = {
 
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
+const scrolling = ref(false);
 
 const dateStart = ref<Date | null>(null);
 const menuStart = ref(false);
@@ -251,13 +272,9 @@ const priorities = ref([
   { id: 4, label: "URGENTE", selected: false },
 ]);
 const statuses = ref([
-  { id: 1, label: "COMPLETATA", selected: false },
-  { id: 2, label: "IN ATTESA", selected: false },
-  { id: 3, label: "IN CORSO", selected: false },
-]);
-const dates = ref([
-  { id: 1, label: "Inizio", selected: null as string | null },
-  { id: 2, label: "Fine", selected: null as string | null },
+  { id: 5, label: "COMPLETATA", selected: false },
+  { id: 6, label: "IN ATTESA", selected: false },
+  { id: 7, label: "IN CORSO", selected: false },
 ]);
 const sortingMethod = ref([
   { ascending: null as boolean | null },
@@ -293,7 +310,7 @@ watch(expand, (newVal, oldVal) => {
     // Se expand diventa false, aspetta prima di nascondere
     setTimeout(() => {
       showExpand.value = false;
-    }, 300); // durata animazione approx
+    }, 75); // durata animazione approx
   }
 });
 
@@ -313,6 +330,18 @@ watch(
 );
 
 //----------------------METHODS------------------------
+onMounted(() => {
+  const SCROLL_THRESHOLD = 5;
+  const onScroll = () => {
+    scrolling.value = window.scrollY > SCROLL_THRESHOLD;
+  };
+  window.addEventListener("scroll", onScroll);
+  onScroll();
+  onBeforeUnmount(() => {
+    window.removeEventListener("scroll", onScroll);
+  });
+});
+
 function addTaskEmit() {
   emit("add-task");
 }
@@ -473,6 +502,12 @@ const getDateOnly = (str: string | null): string | undefined => {
   const parsed = parseDate(str);
   return parsed && isValid(parsed) ? format(parsed, "yyyy-MM-dd") : undefined;
 };
+
+function clearOrderings() {
+  sortingMethod.value.forEach((method) => {
+    method.ascending = null;
+  });
+}
 </script>
 
 <style scoped>
@@ -486,6 +521,14 @@ const getDateOnly = (str: string | null): string | undefined => {
   overflow-y: auto;
   background-color: transparent;
   z-index: 10;
+}
+
+.sticky-chip-group {
+  position: sticky;
+  top: calc(var(--v-layout-top, 64px) - 8px);
+  z-index: 10;
+  background: white;
+  padding: 2rem 0 0 0;
 }
 
 .offset-content {

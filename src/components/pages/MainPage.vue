@@ -41,13 +41,11 @@ const handleAddTask = () => {
 
 // Gestione dei filtri
 const handleFilterChange = (filters: FilterOptions) => {
-  console.log("Filtri applicati:", filters);
   taskListRef.value?.applyFilters(filters);
 };
 
 // Gestione dell'ordinamento
 const handleSortChange = (sortOptions: SortOptions) => {
-  console.log("Ordinamento:", sortOptions);
   taskListRef.value?.applySort(sortOptions);
 };
 </script>

@@ -18,7 +18,7 @@
             v-model="username.value.value"
             density="compact"
             placeholder="Username"
-            prepend-inner-icon="mdi-email-outline"
+            inner-icon="mdi-email-outline"
             variant="outlined"
             :error-messages="username.errorMessage.value"
           ></v-text-field>
@@ -36,7 +36,7 @@
             :type="visible ? 'text' : 'password'"
             density="compact"
             placeholder="Enter your password"
-            prepend-inner-icon="mdi-lock-outline"
+            inner-icon="mdi-lock-outline"
             variant="outlined"
             @click:append-inner="visible = !visible"
           ></v-text-field>

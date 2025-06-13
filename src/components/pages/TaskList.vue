@@ -15,21 +15,15 @@
           }}
         </h3>
         <p>Inizia ad aggiungere una nuova task!</p>
-        <v-btn
-          class="mt-4"
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="addTask"
-        >
+        <v-btn class="mt-4" color="primary" icon="mdi-plus" @click="addTask">
           Aggiungi Task
         </v-btn>
       </v-col>
-
       <Draggable
         v-model="localTasks"
         item-key="taskId"
         handle=".drag-handle"
-        class="d-flex flex-wrap w-100"
+        class="d-flex flex-wrap w-100 px-4"
         :animation="200"
       >
         <template #item="{ element: task }">
@@ -102,7 +96,7 @@
               <v-menu
                 v-model="dateMenu"
                 :close-on-content-click="false"
-                transition="scale-transition"
+                transition="scroll-y-transition"
                 offset-y
                 :readonly="isViewMode"
               >
@@ -110,7 +104,7 @@
                   <v-text-field
                     label="Data di Scadenza"
                     color="deep-purple-accent-3"
-                    prepend-inner-icon="mdi-calendar"
+                    innericon="mdi-calendar"
                     v-model="selectedTask.dueDate"
                     v-bind="menuProps"
                     :readonly="isViewMode"

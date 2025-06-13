@@ -100,18 +100,18 @@ const router = useRouter();
 
 const isLoading = ref(false); // Per lo stato di caricamento del pulsante
 const error = ref(null);
-const visible = ref(false); 
+const visible = ref(false);
 
 const { handleSubmit } = useForm({
   validationSchema: {
     email(value) {
-      if (!value) return "L'email è richiesta."; 
+      if (!value) return "L'email è richiesta.";
       if (!/^[a-z0-9.-]+@[a-z.-]+\.[a-z]+$/i.test(value))
         return "L'email non è valida.";
       return true;
     },
     username(value) {
-      if (!value) return "Il nome utente è richiesto."; 
+      if (!value) return "Il nome utente è richiesto.";
       if (value.length < 3)
         return "Il nome utente deve avere almeno 3 caratteri.";
       if (value.length > 8)
