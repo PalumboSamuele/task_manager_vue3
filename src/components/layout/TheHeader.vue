@@ -59,15 +59,9 @@
 
   <!-- menu visibile solo in versione mobile -->
   <v-navigation-drawer v-model="drawer" temporary app>
-    <v-list>
-      <v-list-item :to="'/home'" :class="{ 'mt-8': drawer }">
-        <template #prepend>
-          <v-icon>mdi-home</v-icon>
-        </template>
-        <v-list-item-title>Home</v-list-item-title>
-      </v-list-item>
+    <v-list v-if="!isLoggedIn">
 
-      <v-list-item :to="'/login'">
+      <v-list-item v-if="!isLoggedIn" :to="'/login'">
         <template #prepend>
           <v-icon>mdi-login</v-icon>
         </template>
@@ -79,6 +73,15 @@
           <v-icon>mdi-account-plus</v-icon>
         </template>
         <v-list-item-title>Sign Up</v-list-item-title>
+      </v-list-item>
+    </v-list>
+
+    <v-list v-if="isLoggedIn">
+      <v-list-item :to="'/'" @click="logout">
+        <template #prepend>
+          <v-icon>mdi-logout</v-icon>
+        </template>
+        <v-list-item-title>Logout</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>

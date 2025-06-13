@@ -1,89 +1,110 @@
 <template>
   <div :class="{ 'blurred-background': dialog || confirmDialog }">
-    <v-row justify="space-evenly">
-      <Draggable
-        v-model="localTasks"
-        item-key="taskId"
-        handle=".drag-handle"
-        class="d-flex flex-wrap"
-        :animation="200"
-      >
-        <template #item="{ element: task }">
-          <v-col :cols="columns" :key="task.taskId">
-            <base-task
-              :title="task.title"
-              :priority="task.priority"
-              :status="task.status"
-              :description="task.description"
-              :dueDate="task.dueDate"
-              :createdDate="task.createdDate"
-              @callDelete="requestDeleteTask"
-              @editTask="editTask"
-              @viewTask="viewTask"
-            ></base-task>
-          </v-col>
-        </template>
-      </Draggable>
-    </v-row>
-  </div>
+      <v-row justify="space-evenly">
+        <v-col cols="12" class="text-center">
+          <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
+          <h3 class="text-h6 mt-3">Task non trovate</h3>
+          <p>Inizia ad aggiungere una nuova task!</p>
+          <v-btn
+            class="mt-4"
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="addTask"
+          >
+            Aggiungi Task
+          </v-btn>
+        </v-col>
 
-  <v-dialog v-model="dialog" max-width="600">
-    <v-card>
-      <v-card-title>{{ dialogTitle }}</v-card-title>
-      <v-card-text v-if="selectedTask">
-        <v-row dense>
-          <v-col cols="12">
-            <v-text-field
-              label="Titolo Task"
-              color="deep-purple-accent-3"
-              v-model="selectedTask.title"
-              :readonly="isViewMode"
-              required
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-textarea
-              label="Descrizione"
-              color="deep-purple-accent-3"
-              v-model="selectedTask.description"
-              :readonly="isViewMode"
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-select
-              :items="['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
-              color="deep-purple-accent-3"
-              label="Priorità"
-              v-model="selectedTask.priority"
-              :readonly="isViewMode"
-              required
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-select
-              :items="['PENDING', 'IN_PROGRESS', 'COMPLETED']"
-              color="deep-purple-accent-3"
-              label="Stato"
-              v-model="selectedTask.status"
-              :readonly="isViewMode"
-              required
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12">
-            <v-menu
-              v-model="dateMenu"
-              :close-on-content-click="false"
-              transition="scale-transition"
-              offset-y
-              :readonly="isViewMode"
-            >
-              <template v-slot:activator="{ props: menuProps }">
-                <v-text-field
-                  label="Data di Scadenza"
+        <Draggable
+          v-model="localTasks"
+          item-key="taskId"
+          handle=".drag-handle"
+          class="d-flex flex-wrap"
+          :animation="200"
+        >
+          <template #item="{ element: task }">
+            <v-col :cols="columns" :key="task.taskId">
+              <base-task
+                v-bind="task"
+                @callDelete="requestDeleteTask"
+                @editTask="editTask"
+                @viewTask="viewTask"
+              />
+            </v-col>
+          </template>
+        </Draggable>
+      </v-row>
+
+    <v-dialog v-model="dialog" max-width="600">
+      <v-card>
+        <v-card-title>{{ dialogTitle }}</v-card-title>
+
+        <v-card-text v-if="selectedTask">
+          <v-row dense>
+            <v-col cols="12">
+              <v-text-field
+                label="Titolo Task"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.title"
+                :readonly="isViewMode"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-textarea
+                label="Descrizione"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.description"
+                :readonly="isViewMode"
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                :items="['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
+                color="deep-purple-accent-3"
+                label="Priorità"
+                v-model="selectedTask.priority"
+                :readonly="isViewMode"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                :items="['PENDING', 'IN_PROGRESS', 'COMPLETED']"
+                color="deep-purple-accent-3"
+                label="Stato"
+                v-model="selectedTask.status"
+                :readonly="isViewMode"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-menu
+                v-model="dateMenu"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+                :readonly="isViewMode"
+              >
+                <template v-slot:activator="{ props: menuProps }">
+                  <v-text-field
+                    label="Data di Scadenza"
+                    color="deep-purple-accent-3"
+                    prepend-inner-icon="mdi-calendar"
+                    v-model="selectedTask.dueDate"
+                    v-bind="menuProps"
+                    :readonly="isViewMode"
+                    required
+                    variant="outlined"
+                  />
+                </template>
+                <v-date-picker
+                  v-if="!isViewMode"
+                  v-model="datePickerValue"
                   color="deep-purple-accent-3"
                   prepend-inner-icon="mdi-calendar"
                   v-model="selectedTask.dueDate"
@@ -92,84 +113,86 @@
                   required
                   variant="outlined"
                 />
-              </template>
-              <v-date-picker
-                v-if="!isViewMode"
-                v-model="datePickerValue"
-                color="deep-purple-accent-3"
-                @update:model-value="updateDueDate"
-              />
-            </v-menu>
-          </v-col>
-        </v-row>
-      </v-card-text>
-      <v-divider />
+              </v-menu>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-divider />
 
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          text="Chiudi"
-          color="red-accent-4"
-          variant="flat"
-          @click="closeDialog"
-          :disabled="confirmDialog"
-        />
-        <v-btn
-          v-if="isViewMode"
-          color="light-blue-accent-4"
-          text="Modifica"
-          variant="tonal"
-          @click="enableEditMode"
-          :disabled="confirmDialog"
-        />
-        <v-btn
-          v-if="!isViewMode"
-          color="light-blue-accent-4"
-          text="Salva"
-          variant="tonal"
-          @click="onSaveClick"
-          :disabled="confirmDialog"
-        />
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            text="Chiudi"
+            color="red-accent-4"
+            variant="flat"
+            @click="closeDialog"
+            :disabled="confirmDialog"
+          />
+          <v-btn
+            v-if="isViewMode"
+            color="light-blue-accent-4"
+            text="Modifica"
+            variant="tonal"
+            @click="enableEditMode"
+            :disabled="confirmDialog"
+          />
+          <v-btn
+            v-if="!isViewMode"
+            color="light-blue-accent-4"
+            text="Salva"
+            variant="tonal"
+            @click="onSaveClick"
+            :disabled="confirmDialog"
+          />
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-  <v-dialog v-model="confirmDialog" max-width="400">
-    <v-card class="rounded-xl elevation-2 pa-4">
-      <v-card-title class="text-h6">{{ confirmTitle }}</v-card-title>
-      <v-card-text>{{ confirmMessage }}</v-card-text>
+    <v-dialog v-model="confirmDialog" max-width="400">
+      <v-card class="pa-4 rounded-xl">
+        <v-card-title class="d-flex align-center text-h6">
+          <v-icon class="me-2" color="primary">mdi-help-circle-outline</v-icon>
+          {{ confirmTitle }}
+        </v-card-title>
+        <v-card-text class="text-body-1 text-high-emphasis">
+          {{ confirmMessage }}
+        </v-card-text>
 
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          text
-          color="grey"
-          @click="cancelConfirm"
-          :disabled="loadingConfirm"
-        >
-          Annulla
-        </v-btn>
-        <v-btn
-          text
-          color="primary"
-          @click="confirmAction"
-          :loading="loadingConfirm"
-        >
-          Conferma
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+        <v-card-actions>
+          <v-spacer />
+          <v-card-actions class="justify-end pt-4">
+            <v-btn
+              variant="elevated"
+              color="error"
+              @click="cancelConfirm"
+              :disabled="loadingConfirm"
+            >
+              Annulla
+            </v-btn>
+            <v-btn
+              variant="elevated"
+              color="light-blue-accent-3"
+              @click="confirmAction"
+              :loading="loadingConfirm"
+              class="ms-2"
+            >
+              Conferma
+            </v-btn>
+          </v-card-actions>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-  <v-snackbar
-    v-model="snackbar"
-    :color="snackbarColor"
-    timeout="3000"
-    location="top right"
-    rounded="pill"
-  >
-    {{ snackbarMessage }}
-  </v-snackbar>
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="3000"
+      location="top right"
+      rounded="pill"
+    >
+      {{ snackbarMessage }}
+    </v-snackbar>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -330,7 +353,7 @@ const requestSaveEditConfirm = () => {
         !task.status ||
         !task.dueDate
       ) {
-        showSnackbar("Compila tutti i campi obbligatori", "error");
+        showSnackbar("Compila tutti i campi ", "error");
         loadingConfirm.value = false;
         return;
       }
@@ -375,7 +398,7 @@ const saveTaskDirectly = async () => {
     !task.status ||
     !task.dueDate
   ) {
-    showSnackbar("Compila tutti i campi obbligatori", "error");
+    showSnackbar("Compila tutti i campi", "error");
     return;
   }
 
