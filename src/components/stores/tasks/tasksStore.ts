@@ -3,14 +3,14 @@ import api from "@/axios";
 import { useAuthStore } from "../auth/authStore";
 
 export interface Task {
-  taskId: string;
+  taskId: number;
   title: string;
   description: string;
   priority: "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   status: "" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
   dueDate: string;
   createdDate: string;
-  userId: string;
+  // userId: string;
 }
 
 export interface AddTaskPayload {
@@ -22,7 +22,7 @@ export interface AddTaskPayload {
 }
 
 export interface UpdateTaskPayload {
-  taskId: string;
+  taskId: number;
   title: string;
   description?: string;
   priority: "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -31,7 +31,7 @@ export interface UpdateTaskPayload {
 }
 
 export interface DeleteTaskPayload {
-  taskId: string;
+  taskId: number;
 }
 
 interface TaskStoreState {
@@ -43,7 +43,116 @@ interface TaskStoreState {
 export const useTaskStore = defineStore("tasks", {
   state: (): TaskStoreState => ({
     lastFetch: null,
-    tasks: [],
+    tasks: [
+      {
+        taskId: 1,
+        title: "TASK VUETIFY 1",
+        priority: "LOW",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 2,
+        title: "TASK VUETIFY 2",
+        priority: "MEDIUM",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 3,
+        title: "TASK VUETIFY 3",
+        priority: "HIGH",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 4,
+        title: "TASK VUETIFY 4",
+        priority: "URGENT",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 5,
+        title: "TASK VUETIFY 5",
+        priority: "LOW",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 6,
+        title: "TASK VUETIFY 6",
+        priority: "MEDIUM",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 7,
+        title: "TASK VUETIFY 1",
+        priority: "LOW",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 8,
+        title: "TASK VUETIFY 2",
+        priority: "MEDIUM",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 9,
+        title: "TASK VUETIFY 3",
+        priority: "HIGH",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 10,
+        title: "TASK VUETIFY 4",
+        priority: "URGENT",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 11,
+        title: "TASK VUETIFY 5",
+        priority: "LOW",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+      {
+        taskId: 12,
+        title: "TASK VUETIFY 6",
+        priority: "MEDIUM",
+        status: "PENDING",
+        description: "Ciao a tutti, sono una task creata usando Vuetify3 DX",
+        dueDate: "12-03-2026",
+        createdDate: "10-06-2025",
+      },
+    ],
     isLoading: false,
   }),
   getters: {
@@ -55,7 +164,7 @@ export const useTaskStore = defineStore("tasks", {
     },
     taskById:
       (state) =>
-      (taskId: string): Task | undefined => {
+      (taskId: number): Task | undefined => {
         return state.tasks.find((task) => task.taskId === taskId);
       },
     shouldUpdate(state): boolean {
@@ -112,7 +221,7 @@ export const useTaskStore = defineStore("tasks", {
               status: taskData.status,
               dueDate: taskData.dueDate,
               createdDate: taskData.createdDate,
-              userId: taskData.userId,
+              // userId: taskData.userId,
             })
           ),
         });
