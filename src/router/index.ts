@@ -55,7 +55,6 @@ router.beforeEach(async (to, from, next) => {
 
   // Se l'utente è autenticato e sta cercando di accedere a login o signup
   if (isAuthenticated && ["/login", "/signup", "/"].includes(to.path)) {
-    console.log("Reindirizzamento a tasks: utente già autenticato");
     next(`/users/${userId}/tasks/`);
     return;
   }

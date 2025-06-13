@@ -1,7 +1,7 @@
 <template>
   <v-card
     variant="outlined"
-    class="mx-auto my-3 d-flex flex-column"
+    class="my-3 d-flex flex-column"
     :class="[`bg-${priorityColor}`]"
     rounded="xl"
     hover
@@ -36,10 +36,7 @@
       </div>
 
       <div class="mt-4">
-        <div
-          class="d-flex flex-wrap justify-space-between"
-          :class="{ 'flex-column': isGridView }"
-        >
+        <div class="d-flex flex-wrap justify-space-between">
           <v-btn
             color="indigo-darken-1"
             class="rounded-pill"
@@ -78,7 +75,6 @@ const props = defineProps({
   priority: String,
   dueDate: String,
   createdDate: String,
-  isGridView: Boolean,
 });
 
 const emit = defineEmits(["callDelete", "editTask", "viewTask"]);

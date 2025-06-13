@@ -106,7 +106,12 @@
                   v-if="!isViewMode"
                   v-model="datePickerValue"
                   color="deep-purple-accent-3"
-                  @update:model-value="updateDueDate"
+                  prepend-inner-icon="mdi-calendar"
+                  v-model="selectedTask.dueDate"
+                  v-bind="menuProps"
+                  :readonly="isViewMode"
+                  required
+                  variant="outlined"
                 />
               </v-menu>
             </v-col>
@@ -193,16 +198,15 @@
 <script lang="ts" setup>
 import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
-import { shallowRef, ref, computed, watch, onMounted } from "vue";
 import {
   useTaskStore,
   type Task,
   type AddTaskPayload,
   type UpdateTaskPayload,
 } from "../stores/tasks/tasksStore";
-import BaseTask from "../ui/BaseTask.vue";
 import { parse, format, isValid } from "date-fns";
 
+const display = useDisplay();
 const taskStore = useTaskStore();
 
 const dialog = shallowRef(false);
@@ -217,15 +221,26 @@ const snackbar = ref(false);
 const snackbarMessage = ref("");
 const snackbarColor = ref("success");
 
-const display = useDisplay();
-const columns = computed(() =>
-  display.smAndDown.value ? 12 : display.md.value ? 6 : 4
-);
+const confirmDialog = ref(false);
+const confirmTitle = ref("");
+const confirmMessage = ref("");
+const confirmCallback = ref<(() => Promise<void>) | null>(null);
+const loadingConfirm = ref(false);
 
-const localTasks = computed<Task[]>({
-  get: () => taskStore.getAllTasks,
-  set: (tasks) => taskStore.updateTasks(tasks),
+const columns = computed(() => {
+  switch (true) {
+    case display.smAndDown.value:
+      return 7;
+    case display.md.value:
+      return 5;
+    case display.lgAndUp.value:
+      return 4;
+    default:
+      return 12;
+  }
 });
+
+const localTasks = ref<Task[]>([]);
 
 const dialogTitle = computed(() =>
   modalMode.value === "view"
@@ -234,12 +249,6 @@ const dialogTitle = computed(() =>
     ? "Modifica Task"
     : "Crea Nuova Task"
 );
-
-const confirmDialog = ref(false);
-const confirmTitle = ref("");
-const confirmMessage = ref("");
-const confirmCallback = ref<(() => Promise<void>) | null>(null);
-const loadingConfirm = ref(false);
 
 const showSnackbar = (message: string, color = "success") => {
   snackbarMessage.value = message;
@@ -261,7 +270,7 @@ const updateDueDate = (newDate: Date | null) => {
   dateMenu.value = false;
 };
 
-const viewTask = (taskId: string) => {
+const viewTask = (taskId: number) => {
   const task = taskStore.taskById(taskId);
   if (!task) return;
 
@@ -272,7 +281,7 @@ const viewTask = (taskId: string) => {
   dialog.value = true;
 };
 
-const editTask = (taskId: string) => {
+const editTask = (taskId: number) => {
   const task = taskStore.taskById(taskId);
   if (!task) return;
 
@@ -311,7 +320,7 @@ const enableEditMode = () => {
   isViewMode.value = false;
 };
 
-const requestDeleteTask = (taskId: string) => {
+const requestDeleteTask = (taskId: number) => {
   confirmTitle.value = "Conferma Eliminazione";
   confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
   confirmCallback.value = async () => {
@@ -445,11 +454,7 @@ watch(
   { immediate: true }
 );
 
-onMounted(() => {
-  taskStore
-    .getTaskList()
-    .catch((err) => console.error("Errore fetch tasks:", err));
-});
+onMounted(() => (localTasks.value = taskStore.getAllTasks));
 </script>
 
 <style scoped>
