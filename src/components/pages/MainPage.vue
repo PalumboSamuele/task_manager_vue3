@@ -15,18 +15,20 @@
       <task-data-table
         v-else
         @add-task="handleAddTask"
-        @change-view="changeViewMode"
         @edit-task="handleEditTask"
+        @change-view="changeViewMode"
       ></task-data-table>
     </v-fade-transition>
   </v-container>
 </template>
 
 <script setup lang="ts">
+// MAINPAGE
+
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 
 const taskStore = useTaskStore();
-const modeList = computed(() => taskStore.getVisualizationMode === "list");
+const modeList = computed(() => taskStore.getVisualizationMode === "grid");
 
 // Definizione dei tipi
 type FilterOptions = {
@@ -67,7 +69,9 @@ const handleEditTask = (taskId: string) => {
   taskListRef.value?.editTask(taskId);
 };
 
-const changeViewMode = (mode: "list" | "data-table") => {
+const changeViewMode = (mode: "grid" | "data-table") => {
+  console.log("new mode: " + mode);
   taskStore.setVisualizationMode(mode);
+  console.log("store visualization mode: " + taskStore.getVisualizationMode);
 };
 </script>

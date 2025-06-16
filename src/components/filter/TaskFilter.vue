@@ -234,6 +234,8 @@
 </template>
 
 <script setup lang="ts">
+// TASKFILTER
+
 import { parse, isValid, format, startOfToday } from "date-fns";
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 import { useI18n } from "vue-i18n";
