@@ -242,6 +242,8 @@
 </template>
 
 <script setup lang="ts">
+// TASKFILTER
+
 import { parse, isValid, format, startOfToday } from "date-fns";
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 import { useI18n } from "vue-i18n";
@@ -309,7 +311,6 @@ const statuses = ref([
 const dates = ref([
   { id: 1, label: "Inizio", selected: null as string | null },
   { id: 2, label: "Fine", selected: null as string | null },
-
 ]);
 const sortingMethod = ref([
   { ascending: null as boolean | null },

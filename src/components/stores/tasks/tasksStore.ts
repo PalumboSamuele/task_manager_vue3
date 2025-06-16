@@ -38,7 +38,7 @@ interface TaskStoreState {
   lastFetch: number | null;
   tasks: Task[];
   isLoading: boolean;
-  visualizationMode: "list" | "data-table";
+  visualizationMode: "grid" | "data-table";
 }
 
 export const useTaskStore = defineStore("tasks", {
@@ -46,7 +46,7 @@ export const useTaskStore = defineStore("tasks", {
     lastFetch: null,
     tasks: [],
     isLoading: false,
-    visualizationMode: "list",
+    visualizationMode: "grid",
   }),
   getters: {
     getAllTasks(state): Task[] {
@@ -79,7 +79,7 @@ export const useTaskStore = defineStore("tasks", {
     resetFetchTimestamp(): void {
       this.lastFetch = null;
     },
-    setVisualizationMode(mode: "list" | "data-table") {
+    setVisualizationMode(mode: "grid" | "data-table") {
       this.visualizationMode = mode;
     },
     updateTasks(payload: Task[]): void {
