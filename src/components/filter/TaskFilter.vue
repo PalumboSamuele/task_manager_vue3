@@ -13,7 +13,9 @@
           Aggiungi Task
         </v-btn>
         <v-card class="mt-4" elevation="2">
-          <v-card-title>Filtri</v-card-title>
+          <v-card-title>{{
+            $t("taskFilter.filterHeaderMessage")
+          }}</v-card-title>
           <v-divider></v-divider>
 
           <!-- Priority and State panels -->
@@ -39,7 +41,9 @@
               <template #text>
                 <v-row class="mb-2" align="center">
                   <v-col cols="4">
-                    <span class="font-weight-black">Data d'inizio:</span>
+                    <span class="font-weight-black">{{
+                      $t("taskFilter.startDate")
+                    }}</span>
                   </v-col>
                   <v-col cols="8">
                     <v-menu
@@ -71,7 +75,9 @@
 
                 <v-row align="center">
                   <v-col cols="4">
-                    <span class="font-weight-black">Data di termine:</span>
+                    <span class="font-weight-black">{{
+                      $t("taskFilter.endDate")
+                    }}</span>
                   </v-col>
                   <v-col cols="8">
                     <v-menu
@@ -124,8 +130,7 @@
                     @click="toggleSort('dueDate')"
                     class="mb-2 mt-3"
                     block
-                  >
-                    Per scadenza
+                    >{{ $t("taskFilter.sortByDueDate") }}
                     <v-icon
                       class="ml-2"
                       v-if="
@@ -147,7 +152,7 @@
                     class="mb-2"
                     block
                   >
-                    Per priorità
+                    {{ $t("taskFilter.sortByPriority") }}
                     <v-icon
                       class="ml-2"
                       v-if="
@@ -200,7 +205,7 @@
               @click.stop="clearFilters"
             >
               <v-icon icon="mdi-delete-outline" size="large"></v-icon>
-              Clear filters</v-btn
+              {{ $t("taskFilter.clearFilter") }}</v-btn
             >
             <v-fade-transition group>
               <v-chip
@@ -224,6 +229,9 @@
 <script setup lang="ts">
 import { parse, isValid, format } from "date-fns";
 import { startOfToday } from "date-fns";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const today = startOfToday();
 const emit = defineEmits(["change-filter", "change-sort", "add-task"]);
@@ -266,15 +274,20 @@ const sortBy = ref<string>("");
 const sortOrder = ref<"asc" | "desc" | "">("");
 
 const priorities = ref([
-  { id: 1, label: "BASSA", selected: false },
-  { id: 2, label: "MEDIA", selected: false },
-  { id: 3, label: "ALTA", selected: false },
-  { id: 4, label: "URGENTE", selected: false },
+  { id: 1, label: t("taskFilter.priorityFilter.low"), selected: false },
+  { id: 2, label: t("taskFilter.priorityFilter.medium"), selected: false },
+  { id: 3, label: t("taskFilter.priorityFilter.high"), selected: false },
+  { id: 4, label: t("taskFilter.priorityFilter.urgent"), selected: false },
 ]);
 const statuses = ref([
-  { id: 5, label: "COMPLETATA", selected: false },
-  { id: 6, label: "IN ATTESA", selected: false },
-  { id: 7, label: "IN CORSO", selected: false },
+  { id: 1, label: t("taskFilter.statusFilter.completed"), selected: false },
+  { id: 2, label: t("taskFilter.statusFilter.pending"), selected: false },
+  { id: 3, label: t("taskFilter.statusFilter.inProgress"), selected: false },
+]);
+const dates = ref([
+  { id: 1, label: "Inizio", selected: null as string | null },
+  { id: 2, label: "Fine", selected: null as string | null },
+
 ]);
 const sortingMethod = ref([
   { ascending: null as boolean | null },

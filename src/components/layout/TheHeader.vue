@@ -15,7 +15,7 @@
         <v-img src="https://mayeit.taskaid.eu/img/task-logo.png" alt="Logo" />
       </v-avatar>
       <v-toolbar-title class="text-h6 font-weight-bold text-white">
-        Task Manager
+        {{ $t('header.title')}}
       </v-toolbar-title>
     </v-row>
 
@@ -28,9 +28,10 @@
           color="white"
           class="ml-2"
           :to="'/login'"
-          append-icon="mdi-account-plus"
+          prepend-icon="mdi-login"
+
         >
-          Login
+          {{ $t('header.login')}}
         </v-btn>
         <v-btn
           variant="outlined"
@@ -39,7 +40,7 @@
           :to="'/signup'"
           append-icon="mdi-account-plus"
         >
-          Sign Up
+          {{ $t('header.signup') }}
         </v-btn>
       </template>
 
@@ -49,39 +50,63 @@
           color="white"
           class="ml-2"
           @click="logout"
-          append-icon="mdi-login"
+          prepend-icon="mdi-logout"
+
         >
-          Logout
+          {{ $t('header.logout')}}
         </v-btn>
       </template>
+
+      <!-- Language Switcher Button -->
+      <v-btn
+        variant="outlined"
+        color="white"
+        class="ml-2"
+        prepend-icon="mdi-translate"
+        @click="toggleLanguage"
+      >
+        {{ currentLocale === 'it' ? 'IT' : 'EN' }}
+      </v-btn>
     </v-row>
   </v-app-bar>
 
   <!-- menu visibile solo in versione mobile -->
   <v-navigation-drawer v-model="drawer" temporary app>
     <v-list v-if="!isLoggedIn">
-
       <v-list-item v-if="!isLoggedIn" :to="'/login'">
         <template #append>
           <v-icon>mdi-login</v-icon>
         </template>
-        <v-list-item-title>Login</v-list-item-title>
+        <v-list-item-title>{{ $t('header.login')}}</v-list-item-title>
       </v-list-item>
 
       <v-list-item :to="'/signup'">
         <template #append>
           <v-icon>mdi-account-plus</v-icon>
         </template>
-        <v-list-item-title>Sign Up</v-list-item-title>
+        <v-list-item-title>{{ $t('header.signup')}}</v-list-item-title>
       </v-list-item>
     </v-list>
 
     <v-list v-if="isLoggedIn">
-      <v-list-item :to="'/'" @click="logout">
-        <template #append>
+      <v-list-item @click="logout">
+        <template #prepend>
+
           <v-icon>mdi-logout</v-icon>
         </template>
-        <v-list-item-title>Logout</v-list-item-title>
+        <v-list-item-title>{{ $t('header.logout') }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+
+    <v-divider></v-divider>
+    <v-list>
+      <v-list-item @click="toggleLanguage">
+        <template #prepend>
+          <v-icon>mdi-translate</v-icon>
+        </template>
+        <v-list-item-title>
+          {{ currentLocale === 'it' ? 'Italiano' : 'English' }}
+        </v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
@@ -89,12 +114,18 @@
 
 <script>
 import { useAuthStore } from "@/components/stores/auth/authStore";
+import { useI18n } from 'vue-i18n';
+
 export default {
   name: "TaskManagerHeader",
   data() {
     return {
       drawer: false,
     };
+  },
+  setup() {
+    const { locale } = useI18n();
+    return { locale };
   },
   created() {
     this.authStore = useAuthStore();
@@ -103,8 +134,17 @@ export default {
     isLoggedIn() {
       return this.authStore.isAuthenticated;
     },
+    currentLocale() {
+      return this.locale;
+    }
   },
   methods: {
+    toggleLanguage() {
+      const newLocale = this.locale === 'it' ? 'en' : 'it';
+      this.locale = newLocale;
+      localStorage.setItem("locale", newLocale);
+      
+    },
     logout() {
       this.authStore.logout();
       this.$router.replace("/login");
