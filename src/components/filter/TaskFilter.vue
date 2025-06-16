@@ -3,15 +3,30 @@
     <!-- Sidebar fixed -->
     <v-col cols="12" md="3">
       <div class="fixed-sidebar">
-        <v-btn
-          class="mt-4"
-          color="primary"
-          append-icon="mdi-plus"
-          @click="addTaskEmit"
-          block
-        >
-          Aggiungi Task
-        </v-btn>
+        <v-row>
+          <v-col cols="5" class="pr-0">
+            <v-btn
+              class="mt-4"
+              color="secondary"
+              @click="emitChangeDataViewMode('data-table')"
+              block
+            >
+              To table
+              <v-icon icon="mdi-table-of-contents" end size="x-large"></v-icon>
+            </v-btn>
+          </v-col>
+          <v-col cols="7">
+            <v-btn
+              class="mt-4"
+              color="primary"
+              append-icon="mdi-plus"
+              @click="addTaskEmit"
+              block
+            >
+              Aggiungi Task
+            </v-btn>
+          </v-col>
+        </v-row>
         <v-card class="mt-4" elevation="2">
           <v-card-title>Filtri</v-card-title>
           <v-divider></v-divider>
@@ -222,11 +237,16 @@
 </template>
 
 <script setup lang="ts">
-import { parse, isValid, format } from "date-fns";
-import { startOfToday } from "date-fns";
+import { parse, isValid, format, startOfToday } from "date-fns";
+import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 
 const today = startOfToday();
-const emit = defineEmits(["change-filter", "change-sort", "add-task"]);
+const emit = defineEmits([
+  "change-filter",
+  "change-sort",
+  "add-task",
+  "change-view",
+]);
 type PriorityMapping = {
   BASSA: "LOW";
   MEDIA: "MEDIUM";
@@ -252,6 +272,8 @@ const statusMapping: StatusMapping = {
   "IN CORSO": "IN_PROGRESS",
   COMPLETATA: "COMPLETED",
 };
+
+const taskStore = useTaskStore();
 
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
@@ -507,6 +529,10 @@ function clearOrderings() {
   sortingMethod.value.forEach((method) => {
     method.ascending = null;
   });
+}
+
+function emitChangeDataViewMode(mode: "list" | "data-table") {
+  emit("change-view", mode);
 }
 </script>
 
