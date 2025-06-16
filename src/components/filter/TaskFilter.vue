@@ -12,6 +12,7 @@
         >
           {{ $t("taskFilter.addTask") }}
         </v-btn>
+
         <v-card class="mt-4" elevation="2">
           <v-card-title>{{
             $t("taskFilter.filterHeaderMessage")
@@ -233,14 +234,19 @@
 </template>
 
 <script setup lang="ts">
-import { parse, isValid, format } from "date-fns";
-import { startOfToday } from "date-fns";
+import { parse, isValid, format, startOfToday } from "date-fns";
+import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
 const today = startOfToday();
-const emit = defineEmits(["change-filter", "change-sort", "add-task"]);
+const emit = defineEmits([
+  "change-filter",
+  "change-sort",
+  "add-task",
+  "change-view",
+]);
 type PriorityMapping = {
   BASSA: "LOW";
   MEDIA: "MEDIUM";
@@ -266,6 +272,8 @@ const statusMapping: StatusMapping = {
   "IN CORSO": "IN_PROGRESS",
   COMPLETATA: "COMPLETED",
 };
+
+const taskStore = useTaskStore();
 
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
@@ -525,6 +533,10 @@ function clearOrderings() {
   sortingMethod.value.forEach((method) => {
     method.ascending = null;
   });
+}
+
+function emitChangeDataViewMode(mode: "list" | "data-table") {
+  emit("change-view", mode);
 }
 </script>
 
