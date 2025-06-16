@@ -10,11 +10,11 @@
         <h3 class="text-h6 mt-3">
           {{
             localTasks.length === 0 && originalTasks.length !== 0
-              ? "Nessuna task con queste caratteristiche è stata trovata"
-              : "Task non trovate"
+              ? $t("taskList.taskFilt")
+              : $t("taskList.noTask")
           }}
         </h3>
-        <p>Inizia ad aggiungere una nuova task!</p>
+        <p>{{$t("taskList.addMess")}}</p>
         <v-btn
           class="mt-4"
           color="primary"
@@ -90,7 +90,9 @@ import {
   type UpdateTaskPayload,
 } from "../stores/tasks/tasksStore";
 import { parse, format, isValid, startOfToday } from "date-fns";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const today = startOfToday();
 const display = useDisplay();
 const taskStore = useTaskStore();
@@ -147,10 +149,10 @@ const columns = computed(() => {
 });
 const dialogTitle = computed(() =>
   modalMode.value === "view"
-    ? "Dettagli Task"
+    ? "$t('taskList.modal.titleView')"
     : modalMode.value === "edit"
-    ? "Modifica Task"
-    : "Crea Nuova Task"
+    ? "$t('taskList.modal.titleEdit')"
+    : "$t('taskList.modal.titleCreate')"
 );
 
 //----------------------WATCHES------------------------
@@ -365,15 +367,15 @@ const enableEditMode = () => {
 };
 
 const requestDeleteTask = (taskId: string) => {
-  confirmTitle.value = "Conferma Eliminazione";
-  confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
+  confirmTitle.value = t('taskList.modal.deleteTaskTitle');
+  confirmMessage.value = t('taskList.modal.deleteTaskMessage');
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
     try {
       await taskStore.deleteTask({ taskId });
-      showSnackbar("Task eliminata", "error");
+      showSnackbar(t('taskList.toast.toastDeleteMessage'), "error");
     } catch (error) {
-      showSnackbar("Errore durante l'eliminazione della task", "error");
+      showSnackbar(t('taskList.toast.toastErrorDelete'), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -383,8 +385,8 @@ const requestDeleteTask = (taskId: string) => {
 };
 
 const requestSaveEditConfirm = () => {
-  confirmTitle.value = "Conferma Modifica";
-  confirmMessage.value = "Sei sicuro di voler salvare le modifiche apportate?";
+  confirmTitle.value = t("taskList.modal.editTaskTitle");
+  confirmMessage.value = t("taskList.modal.editTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
 
@@ -397,14 +399,14 @@ const requestSaveEditConfirm = () => {
         !task.status ||
         !task.dueDate
       ) {
-        showSnackbar("Compila tutti i campi ", "error");
+        showSnackbar(t("taskList.toast.toastCreate"), "error");
         loadingConfirm.value = false;
         return;
       }
 
       const parsedDate = parseDate(task.dueDate);
       if (!parsedDate) {
-        showSnackbar("Data non valida", "error");
+        showSnackbar(t("taskList.toast.toastDate"), "error");
         loadingConfirm.value = false;
         return;
       }
@@ -421,10 +423,10 @@ const requestSaveEditConfirm = () => {
       };
 
       await taskStore.updateTask(payload);
-      showSnackbar("Task modificata", "info");
+      showSnackbar(t("taskList.toast.toastEditMessage"), "info");
       closeDialog();
     } catch (error) {
-      showSnackbar("Errore durante il salvataggio", "error");
+      showSnackbar(t("taskList.toast.toastErrorModify"), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -442,13 +444,13 @@ const saveTaskDirectly = async () => {
     !task.status ||
     !task.dueDate
   ) {
-    showSnackbar("Compila tutti i campi", "error");
+    showSnackbar(t("taskList.toast.toastCreate"), "error");
     return;
   }
 
   const parsedDate = parseDate(task.dueDate);
   if (!parsedDate) {
-    showSnackbar("Data non valida", "error");
+    showSnackbar(t("taskList.toast.toastDate"), "error");
     return;
   }
 
@@ -464,10 +466,10 @@ const saveTaskDirectly = async () => {
     };
 
     await taskStore.addTask(payload);
-    showSnackbar("Task creata", "success");
+    showSnackbar(t("taskList.toast.toastaddMessage"), "success");
     closeDialog();
   } catch {
-    showSnackbar("Errore durante la creazione della task", "error");
+    showSnackbar(t("taskLost.toast.toastErrorAdd"), "error");
   }
 };
 

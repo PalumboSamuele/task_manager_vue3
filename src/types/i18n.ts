@@ -12,15 +12,22 @@ export interface LocaleMessages {
     addTask: string;
     noTaskFound: string;
     taskFilt: string;
+    noTask: string;
+    addMess: string;
     modal: {
+      title: string;
       titleCreate: string;
       titleEdit: string;
       titleView: string;
+      closeModal: string;
       okTitleSave: string;
       dueDate: string;
       taskCancelTitle: string;
       deleteTaskMessage: string;
       deleteTaskTitle: string;
+      titleValidate: string;
+      descriptionValidate: string;
+      edit: string;
       deleteTaskOkTitle: string;
       editTaskMessage: string;
       editTaskTitle: string;
@@ -34,15 +41,20 @@ export interface LocaleMessages {
       selectStatus: string;
       selectPriority: string;
       formValidationError: string;
+      confirm: string;
+      cancel: string;
     };
     toast: {
       toastDeleteMessage: string;
       toastEditMessage: string;
       toastAddMessage: string;
+      toastErrorDelete: string;
+      toastErrorModify: string;
+      toastErrorAdd: string;
+      toastCreate: string;
+      toastDate: string;
     };
-    popover: {
-      message: string;
-    };
+
   };
   taskFilter: {
     filterHeaderMessage: string;
@@ -94,7 +106,7 @@ export interface LocaleMessages {
     usernameInvalid: string;
     signupError: string;
     password: string;
-    usernameRequired: string,
+    usernameRequired: string;
     passwordRequired: string;
     placeholderPassword: string;
     passwordInvalid: string;
