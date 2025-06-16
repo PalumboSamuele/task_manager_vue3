@@ -38,6 +38,7 @@ interface TaskStoreState {
   lastFetch: number | null;
   tasks: Task[];
   isLoading: boolean;
+  visualizationMode: "list" | "data-table";
 }
 
 export const useTaskStore = defineStore("tasks", {
@@ -45,6 +46,7 @@ export const useTaskStore = defineStore("tasks", {
     lastFetch: null,
     tasks: [],
     isLoading: false,
+    visualizationMode: "list",
   }),
   getters: {
     getAllTasks(state): Task[] {
@@ -63,8 +65,10 @@ export const useTaskStore = defineStore("tasks", {
       const currentTimeStamp = new Date().getTime();
       return (currentTimeStamp - state.lastFetch) / 1000 > 30;
     },
+    getVisualizationMode(state): string {
+      return state.visualizationMode;
+    },
   },
-
   actions: {
     setLoading(status: boolean) {
       this.isLoading = status;
@@ -72,16 +76,17 @@ export const useTaskStore = defineStore("tasks", {
     setFetchTimestamp(): void {
       this.lastFetch = new Date().getTime();
     },
-
     resetFetchTimestamp(): void {
       this.lastFetch = null;
+    },
+    setVisualizationMode(mode: "list" | "data-table") {
+      this.visualizationMode = mode;
     },
     updateTasks(payload: Task[]): void {
       this.$patch({
         tasks: payload,
       });
     },
-
     async getTaskList({
       forceRefresh = false,
     }: { forceRefresh?: boolean } = {}): Promise<void> {
@@ -138,7 +143,6 @@ export const useTaskStore = defineStore("tasks", {
         this.setLoading(false);
       }
     },
-
     async addTask(payload: AddTaskPayload): Promise<Task> {
       this.setLoading(true);
       const userId = localStorage.getItem("userId");
@@ -206,7 +210,6 @@ export const useTaskStore = defineStore("tasks", {
         this.setLoading(false);
       }
     },
-
     async updateTask(payload: UpdateTaskPayload): Promise<Task> {
       this.setLoading(true);
       const userId = localStorage.getItem("userId");

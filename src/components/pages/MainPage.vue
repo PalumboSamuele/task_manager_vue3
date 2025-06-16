@@ -1,19 +1,32 @@
 <template>
   <v-container fluid>
-    <task-filter
-      @change-filter="handleFilterChange"
-      @change-sort="handleSortChange"
-      @add-task="handleAddTask"
-    >
-      <template #taskList>
-        <task-list ref="taskListRef"></task-list>
-      </template>
-    </task-filter>
+    <v-fade-transition mode="out-in">
+      <task-filter
+        v-if="modeList"
+        @change-filter="handleFilterChange"
+        @change-sort="handleSortChange"
+        @add-task="handleAddTask"
+        @change-view="changeViewMode"
+      >
+        <template #taskList>
+          <task-list ref="taskListRef"></task-list>
+        </template>
+      </task-filter>
+      <task-data-table
+        v-else
+        @add-task="handleAddTask"
+        @change-view="changeViewMode"
+        @edit-task="handleEditTask"
+      ></task-data-table>
+    </v-fade-transition>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { useTaskStore } from "@/components/stores/tasks/tasksStore";
+
+const taskStore = useTaskStore();
+const modeList = computed(() => taskStore.getVisualizationMode === "list");
 
 // Definizione dei tipi
 type FilterOptions = {
@@ -30,6 +43,7 @@ type SortOptions = {
 
 const taskListRef = ref<{
   addTask: () => void;
+  editTask: (taskId: string) => void;
   applyFilters: (filters: FilterOptions) => void;
   applySort: (options: SortOptions) => void;
 }>();
@@ -47,5 +61,13 @@ const handleFilterChange = (filters: FilterOptions) => {
 // Gestione dell'ordinamento
 const handleSortChange = (sortOptions: SortOptions) => {
   taskListRef.value?.applySort(sortOptions);
+};
+
+const handleEditTask = (taskId: string) => {
+  taskListRef.value?.editTask(taskId);
+};
+
+const changeViewMode = (mode: "list" | "data-table") => {
+  taskStore.setVisualizationMode(mode);
 };
 </script>
