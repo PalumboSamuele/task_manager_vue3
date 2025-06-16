@@ -7,9 +7,10 @@
         <v-row dense>
           <v-col cols="12">
             <v-text-field
-              label="Titolo Task"
+              :label="t('taskList.modal.title')"
               v-model="localTask.title"
               :readonly="isViewMode"
+              :rules="titleRules"
               variant="outlined"
               color="deep-purple-accent-3"
               required
@@ -17,17 +18,20 @@
           </v-col>
           <v-col cols="12">
             <v-textarea
-              label="Descrizione"
+              :label="t('taskList.modal.description')"
               v-model="localTask.description"
               :readonly="isViewMode"
+              :rules="descriptionRules"
               variant="outlined"
               color="deep-purple-accent-3"
             />
           </v-col>
           <v-col cols="12" md="6">
             <v-select
-              label="Priorità"
-              :items="['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
+              :label="t('taskList.modal.selectPriority')"
+              :items="priorityOptions"
+              item-title="text"
+              item-value="value"
               v-model="localTask.priority"
               :readonly="isViewMode"
               variant="outlined"
@@ -36,8 +40,10 @@
           </v-col>
           <v-col cols="12" md="6">
             <v-select
-              label="Stato"
-              :items="['PENDING', 'IN_PROGRESS', 'COMPLETED']"
+              :label="t('taskList.modal.selectStatus')"
+              :items="statusOptions"
+              item-title="text"
+              item-value="value"
               v-model="localTask.status"
               :readonly="isViewMode"
               variant="outlined"
@@ -54,7 +60,7 @@
             >
               <template v-slot:activator="{ props: menuProps }">
                 <v-text-field
-                  label="Data di Scadenza"
+                  :label="t('taskFilter.dueDate')"
                   v-model="localTask.dueDate"
                   v-bind="menuProps"
                   :readonly="isViewMode"
@@ -79,17 +85,21 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn text="Chiudi" color="red-accent-4" @click="close" />
+        <v-btn
+          :text="t('taskList.modal.closeModal')"
+          color="red-accent-4"
+          @click="close"
+        />
         <v-btn
           v-if="isViewMode"
-          text="Modifica"
+          :text="t('taskList.modal.edit')"
           color="light-blue-accent-4"
           variant="tonal"
           @click="enableEditMode"
         />
         <v-btn
           v-else
-          text="Salva"
+          :text="t('taskList.modal.okTitleSave')"
           color="light-blue-accent-4"
           variant="tonal"
           @click="save"
@@ -102,6 +112,28 @@
 <script lang="ts" setup>
 import { parse, format, isValid, startOfToday } from "date-fns";
 import type { Task } from "@/components/stores/tasks/tasksStore";
+import { useI18n } from "vue-i18n";
+const { locale, t } = useI18n();
+
+const statusOptions = computed(() => [
+  { value: "PENDING", text: t("taskFilter.statusFilter.pending") },
+  { value: "IN_PROGRESS", text: t("taskFilter.statusFilter.inProgress") },
+  { value: "COMPLETED", text: t("taskFilter.statusFilter.completed") },
+]);
+
+const priorityOptions = computed(() => [
+  { value: "LOW", text: t("taskFilter.priorityFilter.low") },
+  { value: "MEDIUM", text: t("taskFilter.priorityFilter.medium") },
+  { value: "HIGH", text: t("taskFilter.priorityFilter.high") },
+  { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
+]);
+
+const titleRules = [
+  (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
+];
+const descriptionRules = [
+  (v: string) => v.length <= 200 || t("taskList.modal.descriptionValidate"),
+];
 
 // Props
 const props = defineProps<{
@@ -153,10 +185,10 @@ watch(
 // Title
 const dialogTitle = computed(() =>
   props.mode === "view"
-    ? "Dettagli Task"
+    ? t("taskList.modal.titleView")
     : props.mode === "edit"
-    ? "Modifica Task"
-    : "Crea Nuova Task"
+    ? t("taskList.modal.titleEdit")
+    : t("taskList.modal.titleCreate")
 );
 
 // Handlers

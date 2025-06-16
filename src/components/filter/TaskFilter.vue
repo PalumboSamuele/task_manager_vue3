@@ -222,7 +222,7 @@
                 @click:close.stop="removeFilter(filter)"
                 :class="`bg-${getPriorityColor(filter.label)}`"
               >
-                {{ filter.groupTitle }}: {{ filter.label }}
+                {{ filter.groupTitle }} {{ filter.label }}
               </v-chip>
             </v-fade-transition>
           </v-chip-group>

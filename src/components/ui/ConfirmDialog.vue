@@ -19,7 +19,7 @@
             @click="onCancel"
             :disabled="loading"
           >
-            Annulla
+            {{$t("taskList.modal.cancel")}}
           </v-btn>
           <v-btn
             variant="elevated"
@@ -28,7 +28,7 @@
             :loading="loading"
             class="ms-2"
           >
-            Conferma
+            {{$t("taskList.modal.confirm")}}
           </v-btn>
         </v-card-actions>
       </v-card-actions>
