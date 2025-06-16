@@ -11,6 +11,7 @@ export interface LocaleMessages {
   taskList: {
     addTask: string;
     noTaskFound: string;
+    taskFilt: string;
     modal: {
       titleCreate: string;
       titleEdit: string;
@@ -47,10 +48,15 @@ export interface LocaleMessages {
     filterHeaderMessage: string;
     status: string;
     priority: string;
+    dueDate: string;
     startDate: string;
     endDate: string;
     orderBy: string;
     clearBtn: string;
+    removeDate: string;
+    resetSort: string;
+    dateLabel: string;
+    addTask: string;
     sortByPriority: string;
     sortByDueDate: string;
     ascending: string;
@@ -86,6 +92,7 @@ export interface LocaleMessages {
     username: string;
     placeholderName: string;
     usernameInvalid: string;
+    signupError: string;
     password: string;
     usernameRequired: string,
     passwordRequired: string;
@@ -103,6 +110,7 @@ export interface LocaleMessages {
     usernameRequired: string;
     placeholderName: string;
     usernameInvalid: string;
+    loginError: string;
     password: string;
     passwordRequired: string;
     placeholderPassword: string;

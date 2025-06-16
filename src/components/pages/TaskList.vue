@@ -21,7 +21,8 @@
           append-icon="mdi-plus"
           @click="addTask"
         >
-          Aggiungi Task
+          {{ $t("taskList.addTask") }}
+
         </v-btn>
       </v-col>
       <Draggable
