@@ -29,6 +29,7 @@
           class="ml-2"
           :to="'/login'"
           prepend-icon="mdi-login"
+
         >
           {{ $t('header.login')}}
         </v-btn>
@@ -37,7 +38,7 @@
           color="white"
           class="ml-2"
           :to="'/signup'"
-          prepend-icon="mdi-account-plus"
+          append-icon="mdi-account-plus"
         >
           {{ $t('header.signup') }}
         </v-btn>
@@ -50,6 +51,7 @@
           class="ml-2"
           @click="logout"
           prepend-icon="mdi-logout"
+
         >
           {{ $t('header.logout')}}
         </v-btn>
@@ -72,14 +74,14 @@
   <v-navigation-drawer v-model="drawer" temporary app>
     <v-list v-if="!isLoggedIn">
       <v-list-item v-if="!isLoggedIn" :to="'/login'">
-        <template #prepend>
+        <template #append>
           <v-icon>mdi-login</v-icon>
         </template>
         <v-list-item-title>{{ $t('header.login')}}</v-list-item-title>
       </v-list-item>
 
       <v-list-item :to="'/signup'">
-        <template #prepend>
+        <template #append>
           <v-icon>mdi-account-plus</v-icon>
         </template>
         <v-list-item-title>{{ $t('header.signup')}}</v-list-item-title>
@@ -89,6 +91,7 @@
     <v-list v-if="isLoggedIn">
       <v-list-item @click="logout">
         <template #prepend>
+
           <v-icon>mdi-logout</v-icon>
         </template>
         <v-list-item-title>{{ $t('header.logout') }}</v-list-item-title>

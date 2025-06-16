@@ -1,8 +1,17 @@
 <template>
   <v-row align="start">
-    <!-- Sidebar sticky -->
+    <!-- Sidebar fixed -->
     <v-col cols="12" md="3">
       <div class="fixed-sidebar">
+        <v-btn
+          class="mt-4"
+          color="primary"
+          append-icon="mdi-plus"
+          @click="addTaskEmit"
+          block
+        >
+          Aggiungi Task
+        </v-btn>
         <v-card class="mt-4" elevation="2">
           <v-card-title>{{
             $t("taskFilter.filterHeaderMessage")
@@ -16,18 +25,16 @@
               :key="filterGroup.id"
               :title="filterGroup.title"
             >
-              <template #text>
-                <v-item-group>
-                  <v-item v-for="item in filterGroup.items" :key="item.id">
-                    <v-checkbox
-                      v-model="item.selected"
-                      :label="item.label"
-                      hide-details
-                      density="compact"
-                    ></v-checkbox>
-                  </v-item>
-                </v-item-group>
-              </template>
+              <v-expansion-panel-text>
+                <v-checkbox
+                  v-for="item in filterGroup.items"
+                  :key="item.id"
+                  v-model="item.selected"
+                  :label="item.label"
+                  hide-details
+                  density="compact"
+                ></v-checkbox>
+              </v-expansion-panel-text>
             </v-expansion-panel>
 
             <v-expansion-panel title="Data di scadenza">
@@ -38,7 +45,7 @@
                       $t("taskFilter.startDate")
                     }}</span>
                   </v-col>
-                  <v-col cols="auto">
+                  <v-col cols="8">
                     <v-menu
                       v-model="menuStart"
                       :close-on-content-click="false"
@@ -49,7 +56,8 @@
                           v-bind="props"
                           variant="outlined"
                           :color="dateStart ? 'light-blue-accent-3' : ''"
-                          prepend-icon="mdi-calendar"
+                          append-icon="mdi-calendar"
+                          block
                         >
                           {{ dateStart ? formatDate(dateStart) : "Seleziona" }}
                         </v-btn>
@@ -71,7 +79,7 @@
                       $t("taskFilter.endDate")
                     }}</span>
                   </v-col>
-                  <v-col cols="auto">
+                  <v-col cols="8">
                     <v-menu
                       v-model="menuEnd"
                       :close-on-content-click="false"
@@ -82,19 +90,30 @@
                           v-bind="props"
                           variant="outlined"
                           :color="dateEnd ? 'light-blue-accent-3' : ''"
-                          prepend-icon="mdi-calendar"
+                          append-icon="mdi-calendar"
+                          block
                         >
                           {{ dateEnd ? formatDate(dateEnd) : "Seleziona" }}
                         </v-btn>
                       </template>
                       <v-date-picker
                         v-model="dateEnd"
-                        :min="dateStart"
+                        :min="dateStart || today"
                         @update:model-value="onDateChange('end')"
                         color="light-blue-accent-3"
                       />
                     </v-menu>
                   </v-col>
+                  <v-btn
+                    variant="outlined"
+                    color="red"
+                    append-icon="mdi-delete-outline"
+                    class="mb-2 mt-4"
+                    block
+                    @click.stop="clearDates"
+                  >
+                    Cancella date
+                  </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
@@ -105,7 +124,9 @@
                 <v-row align="center" justify="start">
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    :color="
+                      sortingMethod[0].ascending !== null ? 'primary' : ''
+                    "
                     @click="toggleSort('dueDate')"
                     class="mb-2 mt-3"
                     block
@@ -124,7 +145,9 @@
                   </v-btn>
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    :color="
+                      sortingMethod[1].ascending !== null ? 'primary' : ''
+                    "
                     @click="toggleSort('priority')"
                     class="mb-2"
                     block
@@ -142,6 +165,16 @@
                       }}
                     </v-icon>
                   </v-btn>
+                  <v-btn
+                    variant="outlined"
+                    color="red"
+                    append-icon="mdi-arrow-u-left-top"
+                    class="mb-2 mt-10"
+                    block
+                    @click.stop="clearOrderings"
+                  >
+                    Resetta ordinamento
+                  </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
@@ -153,8 +186,16 @@
     <!-- Task list in slot -->
     <v-col cols="12" md="9">
       <v-expand-transition>
-        <v-card variant="flat" v-show="showExpand">
-          <v-chip-group column class="mt-2">
+        <v-card
+          variant="flat"
+          v-show="showExpand"
+          class="pl-4"
+          :class="{
+            'sticky-chip-group border-b-md': scrolling,
+            'mt-2': !scrolling,
+          }"
+        >
+          <v-chip-group column>
             <v-btn
               variant="outlined"
               color="red"
@@ -193,10 +234,36 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
 const today = startOfToday();
-const emit = defineEmits(["change-filter", "change-sort"]);
+const emit = defineEmits(["change-filter", "change-sort", "add-task"]);
+type PriorityMapping = {
+  BASSA: "LOW";
+  MEDIA: "MEDIUM";
+  ALTA: "HIGH";
+  URGENTE: "URGENT";
+};
+
+type StatusMapping = {
+  "IN ATTESA": "PENDING";
+  "IN CORSO": "IN_PROGRESS";
+  COMPLETATA: "COMPLETED";
+};
+
+const priorityMapping: PriorityMapping = {
+  BASSA: "LOW",
+  MEDIA: "MEDIUM",
+  ALTA: "HIGH",
+  URGENTE: "URGENT",
+};
+
+const statusMapping: StatusMapping = {
+  "IN ATTESA": "PENDING",
+  "IN CORSO": "IN_PROGRESS",
+  COMPLETATA: "COMPLETED",
+};
 
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
+const scrolling = ref(false);
 
 const dateStart = ref<Date | null>(null);
 const menuStart = ref(false);
@@ -220,6 +287,7 @@ const statuses = ref([
 const dates = ref([
   { id: 1, label: "Inizio", selected: null as string | null },
   { id: 2, label: "Fine", selected: null as string | null },
+
 ]);
 const sortingMethod = ref([
   { ascending: null as boolean | null },
@@ -255,7 +323,7 @@ watch(expand, (newVal, oldVal) => {
     // Se expand diventa false, aspetta prima di nascondere
     setTimeout(() => {
       showExpand.value = false;
-    }, 300); // durata animazione approx
+    }, 75); // durata animazione approx
   }
 });
 
@@ -275,6 +343,22 @@ watch(
 );
 
 //----------------------METHODS------------------------
+onMounted(() => {
+  const SCROLL_THRESHOLD = 5;
+  const onScroll = () => {
+    scrolling.value = window.scrollY > SCROLL_THRESHOLD;
+  };
+  window.addEventListener("scroll", onScroll);
+  onScroll();
+  onBeforeUnmount(() => {
+    window.removeEventListener("scroll", onScroll);
+  });
+});
+
+function addTaskEmit() {
+  emit("add-task");
+}
+
 function getPriorityColor(priority: string): string {
   switch (priority.toUpperCase()) {
     case "LOW":
@@ -316,6 +400,11 @@ function clearFilters() {
   sortOrder.value = "";
   emit("change-sort", { field: "", order: "" });
   emitFilters();
+}
+
+function clearDates() {
+  dateStart.value = null;
+  dateEnd.value = null;
 }
 
 function toggleSort(field: string) {
@@ -362,13 +451,24 @@ function toggleSort(field: string) {
   emitFilters();
 }
 
+const mapPriority = (label: string): string => {
+  const key = label.toUpperCase() as keyof PriorityMapping;
+  return priorityMapping[key] || label;
+};
+
+const mapStatus = (label: string): string => {
+  const key = label.toUpperCase() as keyof StatusMapping;
+  return statusMapping[key] || label;
+};
+
 function emitFilters() {
   const selectedStatuses = statuses.value
     .filter((s) => s.selected)
-    .map((s) => s.label);
+    .map((s) => mapStatus(s.label));
+
   const selectedPriorities = priorities.value
     .filter((p) => p.selected)
-    .map((p) => p.label);
+    .map((p) => mapPriority(p.label));
 
   emit("change-filter", {
     statuses: selectedStatuses,
@@ -415,6 +515,12 @@ const getDateOnly = (str: string | null): string | undefined => {
   const parsed = parseDate(str);
   return parsed && isValid(parsed) ? format(parsed, "yyyy-MM-dd") : undefined;
 };
+
+function clearOrderings() {
+  sortingMethod.value.forEach((method) => {
+    method.ascending = null;
+  });
+}
 </script>
 
 <style scoped>
@@ -423,11 +529,19 @@ const getDateOnly = (str: string | null): string | undefined => {
   top: calc(var(--v-layout-top, 0px) - 1px);
   left: 0;
   width: 25%;
-  padding: 16px;
+  padding: 14px;
   height: calc(100vh - var(--v-layout-top, 0px) - 16px);
   overflow-y: auto;
-  background-color: white;
+  background-color: transparent;
   z-index: 10;
+}
+
+.sticky-chip-group {
+  position: sticky;
+  top: calc(var(--v-layout-top, 64px) - 8px);
+  z-index: 10;
+  background: white;
+  padding: 2rem 0 0 0;
 }
 
 .offset-content {

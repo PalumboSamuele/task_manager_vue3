@@ -156,7 +156,6 @@ export const useTaskStore = defineStore("tasks", {
         priority: payload.priority.toUpperCase() as Task["priority"],
       };
       try {
-        console.log("Sending task:", task);
         const response = await api.post<Task>(ENDPOINT_URL, task, {
           headers: { "Content-Type": "application/json" },
         });

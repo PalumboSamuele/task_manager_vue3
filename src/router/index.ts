@@ -48,7 +48,6 @@ router.beforeEach(async (to, from, next) => {
 
   // Se la rotta richiede autenticazione e l'utente non è autenticato
   if (to.meta.requiresAuth && !isAuthenticated) {
-    console.log("Reindirizzamento a login: utente non autenticato");
     next("/login");
     return;
   }

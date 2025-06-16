@@ -21,6 +21,7 @@
             density="compact"
             :placeholder="$t('loginForm.placeholderName')"
             prepend-inner-icon="mdi-email-outline"
+
             variant="outlined"
             :error-messages="username.errorMessage.value"
           ></v-text-field>
@@ -39,6 +40,7 @@
             density="compact"
             :placeholder="$t('loginForm.placeholderPassword')"
             prepend-inner-icon="mdi-lock-outline"
+
             variant="outlined"
             @click:append-inner="visible = !visible"
           ></v-text-field>

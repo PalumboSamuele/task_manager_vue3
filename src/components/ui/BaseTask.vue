@@ -3,7 +3,7 @@
     variant="outlined"
     class="my-3 d-flex flex-column"
     :class="[`bg-${priorityColor}`]"
-    rounded="xl"
+    rounded="lg"
     hover
     @click.stop="emitView"
   >
@@ -49,6 +49,7 @@
           <v-btn color="error" class="rounded-pill" @click.stop="emitDelete">
             <v-icon icon="mdi-delete"></v-icon>
             <span class="button-text">&nbsp; {{ $t("baseTask.button.delete") }}</span>
+
           </v-btn>
         </div>
         <p class="mt-3 text-white text-caption">{{ $t("baseTask.createdOn") }} {{ createdDate }}</p>
