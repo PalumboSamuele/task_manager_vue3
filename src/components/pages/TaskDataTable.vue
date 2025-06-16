@@ -1,11 +1,7 @@
 <template>
   <div :class="{ 'blurred-background': dialog || confirmDialog }">
     <v-row class="my-3">
-      <v-btn
-        class="mr-2 ml-3"
-        color="secondary"
-        @click="emitChangeDataViewMode('grid')"
-      >
+      <v-btn class="mr-2 ml-3" color="secondary" @click="emitChangeDataViewMode('grid')">
         To grid
         <v-icon icon="mdi-dots-grid" end size="x-large"></v-icon>
       </v-btn>
@@ -24,14 +20,10 @@
       hide-default-footer
     >
       <!-- Resto dei tuoi slot personalizzati -->
-      <template
-        #item.data-table-expand="{ internalItem, isExpanded, toggleExpand }"
-      >
+      <template #item.data-table-expand="{ internalItem, isExpanded, toggleExpand }">
         <v-btn
           v-if="isDescriptionTruncated(internalItem)"
-          :icon="
-            isExpanded(internalItem) ? 'mdi-eye-off-outline' : 'mdi-eye-outline'
-          "
+          :icon="isExpanded(internalItem) ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
           class="text-none"
           color="medium-emphasis"
           size="small"
@@ -80,9 +72,7 @@
       </template>
 
       <template #item.priority="{ item }">
-        <div
-          :class="`font-weight-bold text-${getPriorityColor(item.priority)}`"
-        >
+        <div :class="`font-weight-bold text-${getPriorityColor(item.priority)}`">
           {{ item.priority }}
         </div>
       </template>
@@ -218,9 +208,7 @@
     <v-dialog v-model="confirmDialog" max-width="400">
       <v-card class="pa-4 rounded-xl">
         <v-card-title class="d-flex align-center text-h6">
-          <v-icon class="me-2" color="primary" end
-            >mdi-help-circle-outline</v-icon
-          >
+          <v-icon class="me-2" color="primary" end>mdi-help-circle-outline</v-icon>
           {{ confirmTitle }}
         </v-card-title>
         <v-card-text class="text-body-1 text-high-emphasis">
