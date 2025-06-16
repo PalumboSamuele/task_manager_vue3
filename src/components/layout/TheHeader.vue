@@ -15,7 +15,7 @@
         <v-img src="https://mayeit.taskaid.eu/img/task-logo.png" alt="Logo" />
       </v-avatar>
       <v-toolbar-title class="text-h6 font-weight-bold text-white">
-        {{ $t('header.title')}}
+        {{ $t("header.title") }}
       </v-toolbar-title>
     </v-row>
 
@@ -29,9 +29,8 @@
           class="ml-2"
           :to="'/login'"
           prepend-icon="mdi-login"
-
         >
-          {{ $t('header.login')}}
+          {{ $t("header.login") }}
         </v-btn>
         <v-btn
           variant="outlined"
@@ -40,7 +39,7 @@
           :to="'/signup'"
           append-icon="mdi-account-plus"
         >
-          {{ $t('header.signup') }}
+          {{ $t("header.signup") }}
         </v-btn>
       </template>
 
@@ -51,9 +50,8 @@
           class="ml-2"
           @click="logout"
           prepend-icon="mdi-logout"
-
         >
-          {{ $t('header.logout')}}
+          {{ $t("header.logout") }}
         </v-btn>
       </template>
 
@@ -65,7 +63,7 @@
         prepend-icon="mdi-translate"
         @click="toggleLanguage"
       >
-        {{ currentLocale === 'it' ? 'IT' : 'EN' }}
+        {{ currentLocale === "it" ? "IT" : "EN" }}
       </v-btn>
     </v-row>
   </v-app-bar>
@@ -77,24 +75,23 @@
         <template #append>
           <v-icon>mdi-login</v-icon>
         </template>
-        <v-list-item-title>{{ $t('header.login')}}</v-list-item-title>
+        <v-list-item-title>{{ $t("header.login") }}</v-list-item-title>
       </v-list-item>
 
       <v-list-item :to="'/signup'">
         <template #append>
           <v-icon>mdi-account-plus</v-icon>
         </template>
-        <v-list-item-title>{{ $t('header.signup')}}</v-list-item-title>
+        <v-list-item-title>{{ $t("header.signup") }}</v-list-item-title>
       </v-list-item>
     </v-list>
 
     <v-list v-if="isLoggedIn">
       <v-list-item @click="logout">
         <template #prepend>
-
           <v-icon>mdi-logout</v-icon>
         </template>
-        <v-list-item-title>{{ $t('header.logout') }}</v-list-item-title>
+        <v-list-item-title>{{ $t("header.logout") }}</v-list-item-title>
       </v-list-item>
     </v-list>
 
@@ -105,7 +102,7 @@
           <v-icon>mdi-translate</v-icon>
         </template>
         <v-list-item-title>
-          {{ currentLocale === 'it' ? 'Italiano' : 'English' }}
+          {{ currentLocale === "it" ? "Italiano" : "English" }}
         </v-list-item-title>
       </v-list-item>
     </v-list>
@@ -114,7 +111,7 @@
 
 <script>
 import { useAuthStore } from "@/components/stores/auth/authStore";
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 
 export default {
   name: "TaskManagerHeader",
@@ -136,14 +133,13 @@ export default {
     },
     currentLocale() {
       return this.locale;
-    }
+    },
   },
   methods: {
     toggleLanguage() {
-      const newLocale = this.locale === 'it' ? 'en' : 'it';
-      this.locale = newLocale;
+      const newLocale = this.locale === "it" ? "en" : "it";
       localStorage.setItem("locale", newLocale);
-      
+      window.location.reload();
     },
     logout() {
       this.authStore.logout();

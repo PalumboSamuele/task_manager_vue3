@@ -12,6 +12,7 @@ const eng: LocaleMessages = {
   taskList: {
     addTask: "Add task",
     noTaskFound: "No tasks found",
+    taskFilt: "",
     modal: {
       titleCreate: "Create new task",
       titleEdit: "Modify task",
@@ -48,13 +49,18 @@ const eng: LocaleMessages = {
     filterHeaderMessage: "Filter the tasks:",
     status: "Status:",
     priority: "Priority:",
-    startDate: "Start:",
-    endDate: "End:",
-    orderBy: "Order by:",
+    startDate: "START:",
+    endDate: "END:",
+    dueDate: "Expiration Date",
+    orderBy: "Sort by:",
     clearBtn: "Clear",
+    dateLabel: "SELECT",
+    addTask: "Add Task",
     sortByPriority: "Sort by priority",
     sortByDueDate: "Sort by due date",
     ascending: "Ascending",
+    removeDate: "Delete Date",
+    resetSort: "Reset sort",
     descending: "Descending",
     clearFilter: "clear filters",
     statusFilter: {
@@ -90,6 +96,7 @@ const eng: LocaleMessages = {
     usernameInvalid:
       "Incorrect username (must be at least 3 characters long and maximum 32)",
     password: "Password",
+    signupError: "Registration failed. Please try again later",
     passwordRequired: "Password required",
     placeholderPassword: "Enter you password",
     passwordInvalid:
@@ -98,7 +105,7 @@ const eng: LocaleMessages = {
     alreadyRegistered: "Are you registered? Sign in!",
     login: "Login now",
     emailInvalid: "Please enter a valid email address (example@gmail.com).",
-    emailExample: "name@example.com"
+    emailExample: "name@example.com",
   },
   loginForm: {
     messagges: "Log in to your account",
@@ -108,6 +115,7 @@ const eng: LocaleMessages = {
     passwordRequired: "Password required",
     usernameInvalid:
       "Incorrect username (must be at least 3 characters long and maximum 32)",
+    loginError: "the server is not responding",
     password: "Password",
     placeholderPassword: "Enter you password",
     passwordInvalid:

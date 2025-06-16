@@ -10,7 +10,7 @@
           @click="addTaskEmit"
           block
         >
-          Aggiungi Task
+          {{ $t("taskFilter.addTask") }}
         </v-btn>
         <v-card class="mt-4" elevation="2">
           <v-card-title>{{
@@ -37,7 +37,10 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
 
-            <v-expansion-panel title="Data di scadenza">
+            <v-expansion-panel>
+              <template #title>
+                {{ $t("taskFilter.dueDate") }}
+              </template>
               <template #text>
                 <v-row class="mb-2" align="center">
                   <v-col cols="4">
@@ -59,7 +62,7 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateStart ? formatDate(dateStart) : "Seleziona" }}
+                          {{ dateStart ? formatDate(dateStart) : $t('taskFilter.dateLabel') }}
                         </v-btn>
                       </template>
                       <v-date-picker
@@ -93,7 +96,7 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateEnd ? formatDate(dateEnd) : "Seleziona" }}
+                          {{ dateEnd ? formatDate(dateEnd) : $t('taskFilter.dateLabel') }}
                         </v-btn>
                       </template>
                       <v-date-picker
@@ -112,14 +115,17 @@
                     block
                     @click.stop="clearDates"
                   >
-                    Cancella date
+                    {{ $t("taskFilter.removeDate") }}
                   </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
 
             <!-- Sort by asc/desc & due date panel -->
-            <v-expansion-panel title="Ordinamento">
+            <v-expansion-panel>
+              <template #title>
+                {{ $t("taskFilter.orderBy") }}
+              </template>
               <template #text>
                 <v-row align="center" justify="start">
                   <v-btn
@@ -173,7 +179,7 @@
                     block
                     @click.stop="clearOrderings"
                   >
-                    Resetta ordinamento
+                    {{ $t("taskFilter.resetSort") }}
                   </v-btn>
                 </v-row>
               </template>
@@ -287,15 +293,14 @@ const statuses = ref([
 const dates = ref([
   { id: 1, label: "Inizio", selected: null as string | null },
   { id: 2, label: "Fine", selected: null as string | null },
-
 ]);
 const sortingMethod = ref([
   { ascending: null as boolean | null },
   { ascending: null as boolean | null },
 ]);
 const filterGroups = ref([
-  { id: 1, title: "Priorità", items: priorities },
-  { id: 2, title: "Stato", items: statuses },
+  { id: 1, title: t("taskFilter.priority"), items: priorities },
+  { id: 2, title: t("taskFilter.status"), items: statuses },
   // { id: 3, title: "Date", items: dates },
   // { id: 4, title: "Ordinamento", items: orderButtons },
 ]);

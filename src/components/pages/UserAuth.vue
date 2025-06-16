@@ -150,7 +150,7 @@ const submitForm = handleSubmit(async (values) => {
       }
     } else if (err.request) {
       error.value =
-        "Nessuna risposta dal server. Il backend potrebbe non essere in esecuzione o non raggiungibile.";
+        t("loginForm.loginError");
     } else {
       error.value =
         err.message || "Si è verificato un errore inatteso durante il login.";

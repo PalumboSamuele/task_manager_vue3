@@ -15,8 +15,13 @@
           }}
         </h3>
         <p>Inizia ad aggiungere una nuova task!</p>
-        <v-btn class="mt-4" color="primary" icon="mdi-plus" @click="addTask">
-          Aggiungi Task
+        <v-btn
+          class="mt-4"
+          color="primary"
+          append-icon="mdi-plus"
+          @click="addTask"
+        >
+          {{ $t("taskList.addTask") }}
         </v-btn>
       </v-col>
       <Draggable

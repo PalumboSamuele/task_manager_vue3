@@ -150,7 +150,7 @@ const submitForm = handleSubmit(async (values) => {
     await authStore.register(formPayload);
     router.replace("/login"); // Reindirizza l'utente alla pagina di login dopo la registrazione
   } catch (err) {
-    error.value = err.message || "Registrazione fallita. Riprova più tardi."; // Usa t()
+    error.value = t("signupForm.signupError"); // Usa t()
   } finally {
     isLoading.value = false;
   }
