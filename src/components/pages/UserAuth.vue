@@ -8,17 +8,20 @@
         rounded="lg"
       >
         <v-card-title class="text-h5 text-center mb-4">
-          Entra nel tuo account
+          {{ $t("loginForm.messagges") }}
         </v-card-title>
 
         <v-form @submit.prevent="submitForm">
-          <div class="text-subtitle-1 text-medium-emphasis">Username</div>
+          <div class="text-subtitle-1 text-medium-emphasis">
+            {{ $t("loginForm.username") }}
+          </div>
 
           <v-text-field
             v-model="username.value.value"
             density="compact"
-            placeholder="Username"
-            inner-icon="mdi-email-outline"
+            :placeholder="$t('loginForm.placeholderName')"
+            prepend-inner-icon="mdi-email-outline"
+
             variant="outlined"
             :error-messages="username.errorMessage.value"
           ></v-text-field>
@@ -35,8 +38,9 @@
             :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
             :type="visible ? 'text' : 'password'"
             density="compact"
-            placeholder="Enter your password"
-            inner-icon="mdi-lock-outline"
+            :placeholder="$t('loginForm.placeholderPassword')"
+            prepend-inner-icon="mdi-lock-outline"
+
             variant="outlined"
             @click:append-inner="visible = !visible"
           ></v-text-field>
@@ -61,27 +65,32 @@
             :loading="isLoading"
             :disabled="isLoading"
           >
-            Login
+            {{ $t("loginForm.login") }}
           </v-btn>
 
           <h4 class="text-subtitle-1 text-center mt-15 mb-1 pt-8">
-            Sign up if you don't have an account!
+            {{ $t("loginForm.notAlreadyRegistered") }}
           </h4>
 
           <v-card-text class="text-center">
             <router-link to="/signup" class="text-blue text-decoration-none">
-              SignUp now <v-icon icon="mdi-chevron-right"></v-icon>
+              {{ $t("loginForm.signup") }}
+              <v-icon icon="mdi-chevron-right"></v-icon>
             </router-link> </v-card-text
         ></v-form>
       </v-card>
     </div>
   </v-main>
 </template>
+
 <script setup>
 import { ref } from "vue";
 import { useAuthStore } from "@/components/stores/auth/authStore";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -93,15 +102,15 @@ const visible = ref(false);
 const { handleSubmit } = useForm({
   validationSchema: {
     username(value) {
-      if (!value) return "Username is required.";
-      if (value.length < 3) return "Username must be at least 3 characters.";
-      if (value.length > 8) return "Username must be at most 8 characters.";
+      if (!value) return t("loginForm.usernameRequired");
+      if (value.length < 3) return t("loginForm.usernameInvalid");
+      if (value.length > 32) return t("loginForm.usernameInvalid");
       return true;
     },
     password(value) {
-      if (!value) return "Password is required.";
-      if (value.length < 8) return "Password must be at least 8 characters.";
-      if (value.length > 20) return "Password must be at most 20 characters.";
+      if (!value) return t("loginForm.passwordRequired");
+      if (value.length < 8) return t("loginForm.passwordInvalid");
+      if (value.length > 20) return t("loginForm.passwordInvalid");
       return true;
     },
   },

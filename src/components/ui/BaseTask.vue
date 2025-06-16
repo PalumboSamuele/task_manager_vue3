@@ -22,16 +22,16 @@
       <div>
         <div class="text-subtitle-2 mb-2 text-grey-lighten-3">
           <span class="d-block">
-            <strong>Priorità:</strong> {{ priority }}
+            <strong> {{ $t("baseTask.priority") }}</strong> {{ priority }}
           </span>
-          <span class="d-block"> <strong>Stato:</strong> {{ status }} </span>
+          <span class="d-block"> <strong>{{ $t("baseTask.status") }}</strong> {{ status }} </span>
         </div>
 
         <div class="d-block text-truncate mb-2 text-grey-lighten-3">
-          <strong>Descrizione:</strong> {{ description }}
+          <strong>{{ $t("baseTask.description") }}</strong> {{ description }}
         </div>
         <div class="text-caption text-grey-lighten-3">
-          <span> <strong>Scadenza:</strong> {{ dueDate }} </span>
+          <span> <strong>{{ $t("baseTask.completition") }}</strong> {{ dueDate }} </span>
         </div>
       </div>
 
@@ -42,16 +42,17 @@
             class="rounded-pill"
             @click.stop="emitEdit"
           >
-            <span class="button-text">Modifica</span>
-            <v-icon icon="mdi-pencil" end></v-icon>
+            <v-icon icon="mdi-pencil" start></v-icon>
+            <span class="button-text">{{ $t("baseTask.button.modify") }}</span>
           </v-btn>
 
           <v-btn color="error" class="rounded-pill" @click.stop="emitDelete">
-            <span class="button-text">Elimina</span>
-            <v-icon icon="mdi-delete" end></v-icon>
+            <v-icon icon="mdi-delete"></v-icon>
+            <span class="button-text">&nbsp; {{ $t("baseTask.button.delete") }}</span>
+
           </v-btn>
         </div>
-        <p class="mt-3 text-white text-caption">Creato il {{ createdDate }}</p>
+        <p class="mt-3 text-white text-caption">{{ $t("baseTask.createdOn") }} {{ createdDate }}</p>
       </div>
     </v-card-text>
   </v-card>
