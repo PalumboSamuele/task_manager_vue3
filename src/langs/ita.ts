@@ -75,6 +75,7 @@ const ita: LocaleMessages = {
     ascending: "Ascendente",
     descending: "Discendente",
     clearFilter: "elimina filtri",
+    mobileTitle: "Filtri",
     statusFilter: {
       inProgress: "IN CORSO",
       completed: "COMPLETATO",

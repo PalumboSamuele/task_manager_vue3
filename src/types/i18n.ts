@@ -74,6 +74,7 @@ export interface LocaleMessages {
     ascending: string;
     descending: string;
     clearFilter: string;
+    mobileTitle: string;
     statusFilter: {
       inProgress: string;
       completed: string;

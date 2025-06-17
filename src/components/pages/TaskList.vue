@@ -32,6 +32,7 @@
         :animation="200"
       >
         <template #item="{ element: task }">
+
           <v-col cols="12" lg="4" md="6" :key="task.taskId">
             <base-task
               :taskId="task.taskId"
@@ -221,6 +222,14 @@ import { parse, format, isValid, startOfToday } from "date-fns";
 const today = startOfToday();
 const taskStore = useTaskStore();
 
+
+const titleRules = [
+  (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
+];
+const descriptionRules = [
+  (v: string) => v.length <= 200 || t("taskList.modal.descriptionValidate"),
+];
+
 const props = defineProps<{
   filters: {
     statuses: string[];
@@ -271,13 +280,13 @@ const confirmCallback = ref<(() => Promise<void>) | null>(null);
 const loadingConfirm = ref(false);
 
 //----------------------COMPUTED------------------------
-
 const dialogTitle = computed(() =>
   modalMode.value === "view"
-    ? "Dettagli Task"
+    ? t("taskList.modal.titleView")
     : modalMode.value === "edit"
-    ? "Modifica Task"
-    : "Crea Nuova Task"
+    ? t("taskList.modal.titleEdit")
+    : t("taskList.modal.titleCreate")
+
 );
 
 //----------------------WATCHES------------------------
