@@ -253,20 +253,8 @@
 </template>
 
 <script lang="ts" setup>
-// TASK DATA TABLE
-
 import type { DataTableHeader } from "vuetify";
-import {
-  useTaskStore,
-  type AddTaskPayload,
-  type Task,
-  type UpdateTaskPayload,
-} from "../stores/tasks/tasksStore";
-import { parse, format, isValid, startOfToday } from "date-fns";
-import { useDisplay } from "vuetify";
-
-const today = startOfToday();
-const display = useDisplay();
+import { useTaskStore, type Task } from "../stores/tasks/tasksStore";
 
 const sortBy = ref([]);
 const taskStore = useTaskStore();
@@ -283,43 +271,23 @@ const headers: DataTableHeader[] = [
   { title: "Priority", key: "priority", align: "start", sortable: true },
   { title: "Status", key: "status", align: "start", sortable: true },
   { title: "Due date", key: "dueDate", align: "start", sortable: true },
-  { title: "Created on", key: "createdDate", align: "start", sortable: false },
-  { title: "Actions", key: "actions", align: "center", sortable: false },
+  {
+    title: "Created on",
+    key: "createdDate",
+    align: "start",
+    sortable: false,
+  },
+  {
+    title: "Actions",
+    key: "actions",
+    align: "center",
+    sortable: false,
+  },
 ];
 
 const tasks = ref<Task[]>([]); // Task visualizzate (filtrate/ordinate)
 
-const dialog = shallowRef(false);
-const selectedTask = ref<Partial<Task>>({});
-const isViewMode = ref(false);
-const modalMode = ref<"create" | "edit" | "view">("create");
-
-const dateMenu = ref(false);
-const datePickerValue = ref<Date | null>(null);
-
-const snackbar = ref(false);
-const snackbarMessage = ref("");
-const snackbarColor = ref("success");
-
-const confirmDialog = ref(false);
-const confirmTitle = ref("");
-const confirmMessage = ref("");
-const confirmCallback = ref<(() => Promise<void>) | null>(null);
-const loadingConfirm = ref(false);
-
-const dialogTitle = computed(() =>
-  modalMode.value === "view"
-    ? "Dettagli Task"
-    : modalMode.value === "edit"
-    ? "Modifica Task"
-    : "Crea Nuova Task"
-);
-
-const emit = defineEmits(["change-view"]);
-
-function emitChangeDataViewMode(mode: "grid" | "data-table") {
-  emit("change-view", mode);
-}
+const emit = defineEmits(["add-task", "edit-task", "change-view"]);
 
 watch(
   () => taskStore.tasks,
@@ -334,224 +302,11 @@ onBeforeMount(async () => {
   tasks.value = [...taskStore.tasks];
 });
 
-const showSnackbar = (message: string, color = "success") => {
-  snackbarMessage.value = message;
-  snackbarColor.value = color;
-  snackbar.value = true;
-};
+function emitEditTask(taskId: string) {
+  emit("edit-task", taskId);
+}
 
-const formatDate = (date: Date | null): string => {
-  return date && isValid(date) ? format(date, "dd-MM-yyyy") : "";
-};
-
-const parseDate = (dateString: string): Date | null => {
-  const parsed = parse(dateString, "dd-MM-yyyy", new Date());
-  return isValid(parsed) ? parsed : null;
-};
-
-const updateDueDate = (newDate: Date | null) => {
-  selectedTask.value.dueDate = formatDate(newDate);
-  dateMenu.value = false;
-};
-
-const editTask = (taskId: string) => {
-  const task = taskStore.taskById(taskId);
-  if (!task) return;
-
-  selectedTask.value = { ...task };
-  datePickerValue.value = parseDate(task.dueDate);
-  modalMode.value = "edit";
-  isViewMode.value = false;
-  dialog.value = true;
-};
-
-const addTask = () => {
-  selectedTask.value = {
-    taskId: undefined,
-    title: "",
-    description: "",
-    priority: "",
-    status: "",
-    dueDate: "",
-  };
-  datePickerValue.value = null;
-  modalMode.value = "create";
-  isViewMode.value = false;
-  dialog.value = true;
-};
-
-const closeDialog = () => {
-  dialog.value = false;
-  selectedTask.value = {};
-  datePickerValue.value = null;
-  modalMode.value = "create";
-  isViewMode.value = false;
-};
-
-const enableEditMode = () => {
-  modalMode.value = "edit";
-  isViewMode.value = false;
-};
-
-const requestDeleteTask = (taskId: string) => {
-  confirmTitle.value = "Conferma Eliminazione";
-  confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
-  confirmCallback.value = async () => {
-    loadingConfirm.value = true;
-    try {
-      await taskStore.deleteTask({ taskId });
-      showSnackbar("Task eliminata", "error");
-    } catch (error) {
-      showSnackbar("Errore durante l'eliminazione della task", "error");
-    } finally {
-      loadingConfirm.value = false;
-      confirmDialog.value = false;
-    }
-  };
-  confirmDialog.value = true;
-};
-
-const requestSaveEditConfirm = () => {
-  confirmTitle.value = "Conferma Modifica";
-  confirmMessage.value = "Sei sicuro di voler salvare le modifiche apportate?";
-  confirmCallback.value = async () => {
-    loadingConfirm.value = true;
-
-    try {
-      const task = selectedTask.value;
-      if (
-        !task.title ||
-        !task.description ||
-        !task.priority ||
-        !task.status ||
-        !task.dueDate
-      ) {
-        showSnackbar("Compila tutti i campi ", "error");
-        loadingConfirm.value = false;
-        return;
-      }
-
-      const parsedDate = parseDate(task.dueDate);
-      if (!parsedDate) {
-        showSnackbar("Data non valida", "error");
-        loadingConfirm.value = false;
-        return;
-      }
-
-      const formattedDate = formatDate(parsedDate);
-
-      const payload: UpdateTaskPayload = {
-        taskId: task.taskId!,
-        title: task.title,
-        description: task.description,
-        priority: task.priority as UpdateTaskPayload["priority"],
-        status: task.status as UpdateTaskPayload["status"],
-        dueDate: formattedDate,
-      };
-
-      await taskStore.updateTask(payload);
-      showSnackbar("Task modificata", "info");
-      closeDialog();
-    } catch (error) {
-      showSnackbar("Errore durante il salvataggio", "error");
-    } finally {
-      loadingConfirm.value = false;
-      confirmDialog.value = false;
-    }
-  };
-  confirmDialog.value = true;
-};
-
-const saveTaskDirectly = async () => {
-  const task = selectedTask.value;
-  if (
-    !task.title ||
-    !task.description ||
-    !task.priority ||
-    !task.status ||
-    !task.dueDate
-  ) {
-    showSnackbar("Compila tutti i campi", "error");
-    return;
-  }
-
-  const parsedDate = parseDate(task.dueDate);
-  if (!parsedDate) {
-    showSnackbar("Data non valida", "error");
-    return;
-  }
-
-  const formattedDate = formatDate(parsedDate);
-
-  try {
-    const payload: AddTaskPayload = {
-      title: task.title,
-      description: task.description,
-      priority: task.priority as AddTaskPayload["priority"],
-      status: task.status.toLowerCase() as AddTaskPayload["status"],
-      dueDate: formattedDate,
-    };
-
-    await taskStore.addTask(payload);
-    showSnackbar("Task creata", "success");
-    closeDialog();
-  } catch {
-    showSnackbar("Errore durante la creazione della task", "error");
-  }
-};
-
-const onSaveClick = () => {
-  if (modalMode.value === "create") {
-    saveTaskDirectly();
-  } else if (modalMode.value === "edit") {
-    requestSaveEditConfirm();
-  }
-};
-
-const cancelConfirm = () => {
-  confirmDialog.value = false;
-  confirmCallback.value = null;
-};
-
-const confirmAction = async () => {
-  if (confirmCallback.value) {
-    await confirmCallback.value();
-  }
-};
-
-const expandedCharLimit = computed(() => {
-  if (display.smAndDown.value) return 30; // mobile
-  if (display.mdAndDown.value) return 50; // tablet
-  return 70; // desktop
-});
-
-const isDescriptionTruncated = (item: any) => {
-  return item.columns.description?.length > expandedCharLimit.value;
-};
-
-function getPriorityColor(priority: string): string {
-  switch (priority.toUpperCase()) {
-    case "LOW":
-    case "BASSA":
-      return "light-green-darken-1";
-    case "MEDIUM":
-    case "MEDIA":
-      return "orange-darken-1";
-    case "HIGH":
-    case "ALTA":
-      return "red-lighten-1";
-    case "URGENT":
-    case "URGENTE":
-      return "purple-lighten-1";
-    default:
-      return "white";
-  }
+function addTaskEmit() {
+  emit("add-task");
 }
 </script>
-
-<style scoped>
-.blurred-background {
-  filter: blur(2px);
-  transition: filter 0.3s ease-in-out;
-}
-</style>

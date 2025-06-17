@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseCard: typeof import('./components/ui/BaseCard.vue')['default']
+    BaseModal: typeof import('./components/ui/BaseModal.vue')['default']
     BaseTask: typeof import('./components/ui/BaseTask.vue')['default']
     ConfirmDialog: typeof import('./components/ui/ConfirmDialog.vue')['default']
     MainPage: typeof import('./components/pages/MainPage.vue')['default']
@@ -16,6 +17,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SignUp: typeof import('./components/pages/SignUp.vue')['default']
     TaskDataTable: typeof import('./components/pages/TaskDataTable.vue')['default']
+    TaskDialog: typeof import('./components/ui/TaskDialog.vue')['default']
     TaskFilter: typeof import('./components/filter/TaskFilter.vue')['default']
     TaskList: typeof import('./components/pages/TaskList.vue')['default']
     TaskModal: typeof import('./components/ui/TaskModal.vue')['default']
