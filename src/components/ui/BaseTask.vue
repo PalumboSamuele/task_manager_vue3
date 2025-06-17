@@ -51,7 +51,7 @@
             <span class="button-text">{{ $t("baseTask.button.modify") }}</span>
           </v-btn>
 
-          <v-btn color="red-accent-4" class="rounded-pill" @click.stop="emitDelete">
+          <v-btn color="primary" class="rounded-pill" @click.stop="emitDelete">
             <v-icon icon="mdi-delete"></v-icon>
             <span class="button-text"
               >&nbsp; {{ $t("baseTask.button.delete") }}</span

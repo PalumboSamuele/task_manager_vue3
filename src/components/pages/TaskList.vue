@@ -32,7 +32,7 @@
         :animation="200"
       >
         <template #item="{ element: task }">
-          <v-col :cols="columns" :key="task.taskId">
+          <v-col :cols="column" :key="task.taskId">
             <base-task
               :taskId="task.taskId"
               :title="task.title"
@@ -243,6 +243,20 @@ const priorityOptions = computed(() => [
   { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
 ]);
 
+// Layout a lista per mobile
+const column = computed(() => {
+  switch (true) {
+    case display.smAndDown.value:
+      return 12; // Full width per layout a lista in mobile
+    case display.md.value:
+      return 6; // 2 colonne su tablet
+    case display.lgAndUp.value:
+      return 4; // 3 colonne su desktop
+    default:
+      return 12;
+  }
+});
+
 const titleRules = [
   (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
 ];
@@ -287,25 +301,12 @@ const confirmCallback = ref<(() => Promise<void>) | null>(null);
 const loadingConfirm = ref(false);
 
 //----------------------COMPUTED------------------------
-
-const columns = computed(() => {
-  switch (true) {
-    case display.smAndDown.value:
-      return 7;
-    case display.md.value:
-      return 5;
-    case display.lgAndUp.value:
-      return 4;
-    default:
-      return 12;
-  }
-});
 const dialogTitle = computed(() =>
   modalMode.value === "view"
-    ? t('taskList.modal.titleView')
+    ? t("taskList.modal.titleView")
     : modalMode.value === "edit"
-    ? t('taskList.modal.titleEdit')
-    : t('taskList.modal.titleCreate')
+    ? t("taskList.modal.titleEdit")
+    : t("taskList.modal.titleCreate")
 );
 
 //----------------------WATCHES------------------------

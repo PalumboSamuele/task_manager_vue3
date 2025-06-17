@@ -75,6 +75,7 @@ const eng: LocaleMessages = {
     resetSort: "Reset sort",
     descending: "Descending",
     clearFilter: "clear filters",
+    mobileTitle: "Filter",
     statusFilter: {
       inProgress: "IN PROGRESS",
       completed: "COMPLETED",

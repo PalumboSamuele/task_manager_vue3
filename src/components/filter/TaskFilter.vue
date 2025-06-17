@@ -1,7 +1,7 @@
 <template>
   <v-row align="start">
-    <!-- Sidebar fixed -->
-    <v-col cols="12" md="3">
+    <!-- Sidebar per desktop -->
+    <v-col cols="12" md="3" v-if="!isMobile">
       <div class="fixed-sidebar">
         <v-btn
           class="mt-4"
@@ -196,8 +196,238 @@
       </div>
     </v-col>
 
-    <!-- Task list in slot -->
-    <v-col cols="12" md="9">
+    <!-- Navigation Drawer per mobile -->
+    <v-navigation-drawer
+      v-if="isMobile"
+      v-model="mobileDrawer"
+      temporary
+      location="left"
+      width="280"
+      class="mobile-filter-drawer"
+    >
+      <v-card flat class="pa-4">
+        <div class="d-flex justify-space-between align-center mb-4">
+          <h6 class="text-h6 font-weight-bold">
+            {{ $t("taskFilter.filterHeaderMessage") }}
+          </h6>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            size="small"
+            @click="mobileDrawer = false"
+          />
+        </div>
+
+        <v-btn
+          color="primary"
+          append-icon="mdi-plus"
+          @click="addTaskEmit"
+          class="mb-5"
+        >
+          {{ $t("taskFilter.addTask") }}
+        </v-btn>
+
+        <!-- sezione filtri in versione mobile-->
+        <v-expansion-panels multiple variant="accordion">
+          <v-expansion-panel
+            v-for="filterGroup in filterGroups"
+            :key="filterGroup.id"
+            :title="filterGroup.title"
+          >
+            <v-expansion-panel-text>
+              <v-checkbox
+                v-for="item in filterGroup.items"
+                :key="item.id"
+                v-model="item.selected"
+                :label="item.label"
+                hide-details
+                density="compact"
+              ></v-checkbox>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+
+          <v-expansion-panel>
+            <template #title>
+              {{ $t("taskFilter.dueDate") }}
+            </template>
+            <template #text>
+              <v-row class="mb-2" align="center">
+                <v-col cols="4">
+                  <span class="font-weight-black">{{
+                    $t("taskFilter.startDate")
+                  }}</span>
+                </v-col>
+                <v-col cols="8">
+                  <v-menu
+                    v-model="menuStart"
+                    :close-on-content-click="false"
+                    transition="slide-y-transition"
+                  >
+                    <template #activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        variant="outlined"
+                        :color="dateStart ? 'light-blue-accent-3' : ''"
+                        append-icon="mdi-calendar"
+                        block
+                      >
+                        {{
+                          dateStart
+                            ? formatDate(dateStart)
+                            : $t("taskFilter.dateLabel")
+                        }}
+                      </v-btn>
+                    </template>
+                    <v-date-picker
+                      v-model="dateStart"
+                      :min="today"
+                      :max="dateEnd"
+                      @update:model-value="onDateChange('start')"
+                      color="light-blue-accent-3"
+                    />
+                  </v-menu>
+                </v-col>
+              </v-row>
+
+              <v-row align="center">
+                <v-col cols="4">
+                  <span class="font-weight-black">{{
+                    $t("taskFilter.endDate")
+                  }}</span>
+                </v-col>
+                <v-col cols="8">
+                  <v-menu
+                    v-model="menuEnd"
+                    :close-on-content-click="false"
+                    transition="slide-y-transition"
+                  >
+                    <template #activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        variant="outlined"
+                        :color="dateEnd ? 'light-blue-accent-3' : ''"
+                        append-icon="mdi-calendar"
+                        block
+                      >
+                        {{
+                          dateEnd
+                            ? formatDate(dateEnd)
+                            : $t("taskFilter.dateLabel")
+                        }}
+                      </v-btn>
+                    </template>
+                    <v-date-picker
+                      v-model="dateEnd"
+                      :min="dateStart || today"
+                      @update:model-value="onDateChange('end')"
+                      color="light-blue-accent-3"
+                    />
+                  </v-menu>
+                </v-col>
+                <v-btn
+                  variant="outlined"
+                  color="red"
+                  append-icon="mdi-delete-outline"
+                  class="mb-2 mt-4"
+                  block
+                  @click.stop="clearDates"
+                >
+                  {{ $t("taskFilter.removeDate") }}
+                </v-btn>
+              </v-row>
+            </template>
+          </v-expansion-panel>
+
+          <!-- Sort by asc/desc & due date panel -->
+          <v-expansion-panel>
+            <template #title>
+              {{ $t("taskFilter.orderBy") }}
+            </template>
+            <template #text>
+              <v-row align="center" justify="start">
+                <v-btn
+                  variant="outlined"
+                  :color="sortingMethod[0].ascending !== null ? 'primary' : ''"
+                  @click="toggleSort('dueDate')"
+                  class="mb-2 mt-3"
+                  block
+                  >{{ $t("taskFilter.sortByDueDate") }}
+                  <v-icon
+                    class="ml-2"
+                    v-if="
+                      sortBy === 'dueDate' &&
+                      sortingMethod[0].ascending !== null
+                    "
+                  >
+                    {{
+                      sortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down"
+                    }}
+                  </v-icon>
+                </v-btn>
+                <v-btn
+                  variant="outlined"
+                  :color="sortingMethod[1].ascending !== null ? 'primary' : ''"
+                  @click="toggleSort('priority')"
+                  class="mb-2"
+                  block
+                >
+                  {{ $t("taskFilter.sortByPriority") }}
+                  <v-icon
+                    class="ml-2"
+                    v-if="
+                      sortBy === 'priority' &&
+                      sortingMethod[1].ascending !== null
+                    "
+                  >
+                    {{
+                      sortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down"
+                    }}
+                  </v-icon>
+                </v-btn>
+                <v-btn
+                  variant="outlined"
+                  color="red"
+                  append-icon="mdi-arrow-u-left-top"
+                  class="mb-2 mt-10"
+                  block
+                  @click.stop="clearOrderings"
+                >
+                  {{ $t("taskFilter.resetSort") }}
+                </v-btn>
+              </v-row>
+            </template>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card>
+    </v-navigation-drawer>
+
+    <v-col :cols="isMobile ? 12 : 12" :md="isMobile ? 12 : 9">
+      <!-- bottone filtri per mobile -->
+      <v-card v-if="isMobile" variant="flat" color="transparent">
+        <v-card-text class="py-2 mb-1" >
+          <div class="d-flex flex-column flex-sm-row gap-3">
+            <v-btn
+              color="primary"
+              append-icon="mdi-filter-variant"
+              @click="mobileDrawer = true"
+              variant="tonal"
+              class="flex-grow-1 flex-sm-grow-0"
+            >
+              {{ $t("taskFilter.mobileTitle") }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              append-icon="mdi-plus"
+              @click="addTaskEmit"
+              variant="elevated"
+              class="flex-grow-1 flex-sm-grow-0"
+            >
+              {{ $t("taskFilter.addTask") }}
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+
       <v-expand-transition>
         <v-card
           variant="flat"
@@ -245,8 +475,10 @@
 import { parse, isValid, format, startOfToday } from "date-fns";
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
 import { useI18n } from "vue-i18n";
+import { useDisplay } from "vuetify";
 
 const { t } = useI18n();
+const display = useDisplay();
 
 const today = startOfToday();
 const emit = defineEmits([
@@ -286,6 +518,7 @@ const taskStore = useTaskStore();
 //-----------------REACTIVE VARIABLES--------------------
 const showExpand = ref(false);
 const scrolling = ref(false);
+const mobileDrawer = ref(false);
 
 const dateStart = ref<Date | null>(null);
 const menuStart = ref(false);
@@ -322,6 +555,7 @@ const filterGroups = ref([
 ]);
 
 //----------------------COMPUTED------------------------
+const isMobile = computed(() => display.smAndDown.value);
 const expand = computed(() => activeFilters.value.length);
 const activeFilters = computed(() => {
   return filterGroups.value.flatMap((group) =>
@@ -378,6 +612,10 @@ onMounted(() => {
 
 function addTaskEmit() {
   emit("add-task");
+  // Chiudi il drawer mobile dopo aver aggiunto la task
+  if (isMobile.value) {
+    mobileDrawer.value = false;
+  }
 }
 
 function getPriorityColor(priority: string): string {
@@ -572,5 +810,15 @@ function emitChangeDataViewMode(mode: "list" | "data-table") {
 .offset-content {
   margin-left: 250px;
   padding: 16px;
+}
+
+.mobile-filter-drawer {
+  z-index: 2000;
+}
+
+@media (max-width: 960px) {
+  .fixed-sidebar {
+    display: none;
+  }
 }
 </style>
