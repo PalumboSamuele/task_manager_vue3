@@ -1,7 +1,9 @@
 <template>
   <v-app-bar
     app
-    color="light-blue-accent-3"
+    :color="
+      theme.global.current.value.dark ? 'grey-darken-4' : 'light-blue-accent-3'
+    "
     elevation="12"
     style="border-bottom-left-radius: 8px; border-bottom-right-radius: 8px"
   >
@@ -65,6 +67,19 @@
       >
         {{ currentLocale === "it" ? "IT" : "EN" }}
       </v-btn>
+      <v-btn @click="toggleTheme" variant="outlined" color="white" class="ml-2">
+        <v-icon
+          :icon="
+            theme.global.current.value.dark
+              ? 'mdi-weather-night'
+              : 'mdi-weather-sunny'
+          "
+          size="large"
+          color="white"
+          class="mr-2"
+        />
+        {{ theme.global.current.value.dark ? "Dark" : "Light" }}
+      </v-btn>
     </v-row>
   </v-app-bar>
 
@@ -105,46 +120,49 @@
           {{ currentLocale === "it" ? "Italiano" : "English" }}
         </v-list-item-title>
       </v-list-item>
+      <v-list-item @click="toggleTheme">
+        <template #prepend>
+          <v-icon>{{ theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny" }}</v-icon>
+        </template>
+        <v-list-item-title>
+          {{ theme.global.current.value.dark ? "Dark" : "Light" }}
+        </v-list-item-title>
+      </v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>
 
-<script>
-import { useAuthStore } from "@/components/stores/auth/authStore";
+<script setup>
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { useAuthStore } from "@/components/stores/auth/authStore";
+import { useTheme } from "vuetify";
 
-export default {
-  name: "TaskManagerHeader",
-  data() {
-    return {
-      drawer: false,
-    };
-  },
-  setup() {
-    const { locale } = useI18n();
-    return { locale };
-  },
-  created() {
-    this.authStore = useAuthStore();
-  },
-  computed: {
-    isLoggedIn() {
-      return this.authStore.isAuthenticated;
-    },
-    currentLocale() {
-      return this.locale;
-    },
-  },
-  methods: {
-    toggleLanguage() {
-      const newLocale = this.locale === "it" ? "en" : "it";
-      localStorage.setItem("locale", newLocale);
-      window.location.reload();
-    },
-    logout() {
-      this.authStore.logout();
-      this.$router.replace("/login");
-    },
-  },
+const drawer = ref(false);
+const router = useRouter();
+const { locale, t } = useI18n();
+const authStore = useAuthStore();
+const theme = useTheme();
+
+const isLoggedIn = computed(() => authStore.isAuthenticated);
+const currentLocale = computed(() => locale.value);
+
+function toggleTheme() {
+  const newTheme = theme.global.current.value.dark ? "light" : "dark";
+  theme.global.name.value = newTheme;
+  //serve a salvare il tema impostato
+  localStorage.setItem("theme", newTheme);
+}
+
+const toggleLanguage = () => {
+  const newLocale = locale.value === "it" ? "en" : "it";
+  localStorage.setItem("locale", newLocale);
+  window.location.reload();
+};
+
+const logout = () => {
+  authStore.logout();
+  router.replace("/login");
 };
 </script>
