@@ -13,12 +13,10 @@
           {{ $t("taskFilter.addTask") }}
         </v-btn>
 
-        <v-card class="mt-4" elevation="2">
-          <v-card-title>{{
-            $t("taskFilter.filterHeaderMessage")
-          }}</v-card-title>
-          <v-divider></v-divider>
-
+        <h6 class="mt-6 mb-0 ml-1 text-h6 font-weight-medium text-justify">
+          {{ $t("taskFilter.filterHeaderMessage") }}
+        </h6>
+        <v-card class="mt-1" elevation="2">
           <!-- Priority and State panels -->
           <v-expansion-panels multiple variant="accordion">
             <v-expansion-panel
@@ -63,7 +61,11 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateStart ? formatDate(dateStart) : $t('taskFilter.dateLabel') }}
+                          {{
+                            dateStart
+                              ? formatDate(dateStart)
+                              : $t("taskFilter.dateLabel")
+                          }}
                         </v-btn>
                       </template>
                       <v-date-picker
@@ -97,7 +99,11 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateEnd ? formatDate(dateEnd) : $t('taskFilter.dateLabel') }}
+                          {{
+                            dateEnd
+                              ? formatDate(dateEnd)
+                              : $t("taskFilter.dateLabel")
+                          }}
                         </v-btn>
                       </template>
                       <v-date-picker

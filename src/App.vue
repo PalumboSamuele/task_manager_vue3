@@ -1,6 +1,8 @@
 <template>
   <v-app>
     <the-header />
+
+
     <v-main>
       <router-view v-slot="{ Component }">
         <transition name="route" mode="out-in">
@@ -14,6 +16,7 @@
 <script lang="ts" setup>
 import { useAuthStore } from "./components/stores/auth/authStore";
 import { onMounted } from "vue";
+
 
 // Inizializza lo store Pinia
 const authStore = useAuthStore();
