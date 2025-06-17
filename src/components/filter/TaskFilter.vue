@@ -3,15 +3,40 @@
     <!-- Sidebar per desktop -->
     <v-col cols="12" md="3" v-if="!isMobile">
       <div class="fixed-sidebar">
-        <v-btn
-          class="mt-4"
-          color="primary"
-          append-icon="mdi-plus"
-          @click="addTaskEmit"
-          block
-        >
-          {{ $t("taskFilter.addTask") }}
-        </v-btn>
+        <v-row>
+          <v-col cols="12" lg="5" class="pr-lg-0">
+            <v-btn
+              class="mt-4"
+              color="secondary"
+              @click="
+                modeGrid
+                  ? emitChangeDataViewMode('data-table')
+                  : emitChangeDataViewMode('grid')
+              "
+              block
+            >
+              {{ modeGrid ? "To table" : "To grid" }}
+              <v-icon
+                v-if="modeGrid"
+                icon="mdi-table-of-contents"
+                size="x-large"
+                end
+              ></v-icon>
+              <v-icon v-else icon="mdi-dots-grid" size="x-large" end></v-icon>
+            </v-btn>
+          </v-col>
+          <v-col cols="12" md="12" lg="7">
+            <v-btn
+              class="mt-lg-4"
+              color="primary"
+              append-icon="mdi-plus"
+              @click="addTaskEmit"
+              block
+            >
+              {{ $t("taskFilter.addTask") }}
+            </v-btn>
+          </v-col>
+        </v-row>
 
         <h6 class="mt-6 mb-0 ml-1 text-h6 font-weight-medium text-justify">
           {{ $t("taskFilter.filterHeaderMessage") }}
@@ -27,7 +52,7 @@
               <v-expansion-panel-text>
                 <v-checkbox
                   v-for="item in filterGroup.items"
-                  :key="item.id"
+                  :key="item.key"
                   v-model="item.selected"
                   :label="item.label"
                   hide-details
@@ -529,15 +554,50 @@ const sortBy = ref<string>("");
 const sortOrder = ref<"asc" | "desc" | "">("");
 
 const priorities = ref([
-  { id: 1, label: t("taskFilter.priorityFilter.low"), selected: false },
-  { id: 2, label: t("taskFilter.priorityFilter.medium"), selected: false },
-  { id: 3, label: t("taskFilter.priorityFilter.high"), selected: false },
-  { id: 4, label: t("taskFilter.priorityFilter.urgent"), selected: false },
+  {
+    id: 1,
+    key: "LOW",
+    label: t("taskFilter.priorityFilter.low"),
+    selected: false,
+  },
+  {
+    id: 2,
+    key: "MEDIUM",
+    label: t("taskFilter.priorityFilter.medium"),
+    selected: false,
+  },
+  {
+    id: 3,
+    key: "HIGH",
+    label: t("taskFilter.priorityFilter.high"),
+    selected: false,
+  },
+  {
+    id: 4,
+    key: "URGENT",
+    label: t("taskFilter.priorityFilter.urgent"),
+    selected: false,
+  },
 ]);
 const statuses = ref([
-  { id: 1, label: t("taskFilter.statusFilter.completed"), selected: false },
-  { id: 2, label: t("taskFilter.statusFilter.pending"), selected: false },
-  { id: 3, label: t("taskFilter.statusFilter.inProgress"), selected: false },
+  {
+    id: 1,
+    key: "COMPLETED",
+    label: t("taskFilter.statusFilter.completed"),
+    selected: false,
+  },
+  {
+    id: 2,
+    key: "PENDING",
+    label: t("taskFilter.statusFilter.pending"),
+    selected: false,
+  },
+  {
+    id: 3,
+    key: "IN_PROGRESS",
+    label: t("taskFilter.statusFilter.inProgress"),
+    selected: false,
+  },
 ]);
 const dates = ref([
   { id: 1, label: "Inizio", selected: null as string | null },
@@ -567,6 +627,7 @@ const activeFilters = computed(() => {
       }))
   );
 });
+const modeGrid = computed(() => taskStore.visualizationMode === "grid");
 
 //----------------------WATCHES------------------------
 // Sincronizza showExpand con expand, ma con delay all'abbassamento
@@ -590,8 +651,12 @@ watch([dateStart, dateEnd], ([start, end]) => {
 });
 
 watch(
-  filterGroups,
+  () =>
+    filterGroups.value
+      .map((group) => group.items.map((item) => item.selected))
+      .flat(),
   () => {
+    console.log("TaskFilter - Cambio nei filtri rilevato");
     emitFilters();
   },
   { deep: true }
@@ -721,22 +786,41 @@ const mapStatus = (label: string): string => {
 };
 
 function emitFilters() {
-  const selectedStatuses = statuses.value
-    .filter((s) => s.selected)
-    .map((s) => mapStatus(s.label));
+  let emitTimeout = null;
+  // Cancella il timeout precedente se esiste
+  if (emitTimeout) {
+    clearTimeout(emitTimeout);
+  }
 
-  const selectedPriorities = priorities.value
-    .filter((p) => p.selected)
-    .map((p) => mapPriority(p.label));
+  // Crea un nuovo timeout per il debouncing
+  emitTimeout = setTimeout(() => {
+    const selectedStatuses = statuses.value
+      .filter((s) => s.selected)
+      .map((s) => s.key);
 
-  emit("change-filter", {
-    statuses: selectedStatuses,
-    priorities: selectedPriorities,
-    dueDateStart: dateStart.value
-      ? format(dateStart.value, "dd-MM-yyyy")
-      : null,
-    dueDateEnd: dateEnd.value ? format(dateEnd.value, "dd-MM-yyyy") : null,
-  });
+    const selectedPriorities = priorities.value
+      .filter((p) => p.selected)
+      .map((p) => p.key);
+
+    // Debug log per verificare i filtri emessi
+    console.log("TaskFilter - Emettendo filtri:", {
+      statuses: selectedStatuses,
+      priorities: selectedPriorities,
+      dueDateStart: dateStart.value
+        ? format(dateStart.value, "dd-MM-yyyy")
+        : null,
+      dueDateEnd: dateEnd.value ? format(dateEnd.value, "dd-MM-yyyy") : null,
+    });
+
+    emit("change-filter", {
+      statuses: selectedStatuses,
+      priorities: selectedPriorities,
+      dueDateStart: dateStart.value
+        ? format(dateStart.value, "dd-MM-yyyy")
+        : null,
+      dueDateEnd: dateEnd.value ? format(dateEnd.value, "dd-MM-yyyy") : null,
+    });
+  }, 100); // Debounce di 100ms
 }
 
 function onDateChange(which: "start" | "end") {
@@ -781,7 +865,7 @@ function clearOrderings() {
   });
 }
 
-function emitChangeDataViewMode(mode: "list" | "data-table") {
+function emitChangeDataViewMode(mode: "grid" | "data-table") {
   emit("change-view", mode);
 }
 </script>
