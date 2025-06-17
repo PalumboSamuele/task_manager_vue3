@@ -1,86 +1,82 @@
 <template>
-  <v-main>
-    <div>
-      <v-card
-        class="mx-auto pa-12 pb-6"
-        elevation="10"
-        max-width="480"
-        rounded="lg"
-      >
-        <v-card-title class="text-h5 text-center mb-4">
-          {{ $t("loginForm.messagges") }}
-        </v-card-title>
+  <div class="mt-8">
+    <v-card
+      class="mx-auto pa-12 pb-6"
+      elevation="10"
+      max-width="480"
+      rounded="lg"
+    >
+      <v-card-title class="text-h5 text-center mb-4">
+        {{ $t("loginForm.messagges") }}
+      </v-card-title>
 
-        <v-form @submit.prevent="submitForm">
-          <div class="text-subtitle-1 text-medium-emphasis">
-            {{ $t("loginForm.username") }}
-          </div>
+      <v-form @submit.prevent="submitForm">
+        <div class="text-subtitle-1 text-medium-emphasis">
+          {{ $t("loginForm.username") }}
+        </div>
 
-          <v-text-field
-            v-model="username.value.value"
-            density="compact"
-            :placeholder="$t('loginForm.placeholderName')"
-            prepend-inner-icon="mdi-email-outline"
+        <v-text-field
+          v-model="username.value.value"
+          density="compact"
+          :placeholder="$t('loginForm.placeholderName')"
+          prepend-inner-icon="mdi-email-outline"
+          variant="outlined"
+          :error-messages="username.errorMessage.value"
+        ></v-text-field>
 
-            variant="outlined"
-            :error-messages="username.errorMessage.value"
-          ></v-text-field>
+        <div
+          class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
+        >
+          Password
+        </div>
 
-          <div
-            class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
-          >
-            Password
-          </div>
+        <v-text-field
+          v-model="password.value.value"
+          :error-messages="password.errorMessage.value"
+          :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visible ? 'text' : 'password'"
+          density="compact"
+          :placeholder="$t('loginForm.placeholderPassword')"
+          prepend-inner-icon="mdi-lock-outline"
+          variant="outlined"
+          @click:append-inner="visible = !visible"
+        ></v-text-field>
 
-          <v-text-field
-            v-model="password.value.value"
-            :error-messages="password.errorMessage.value"
-            :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-            :type="visible ? 'text' : 'password'"
-            density="compact"
-            :placeholder="$t('loginForm.placeholderPassword')"
-            prepend-inner-icon="mdi-lock-outline"
+        <v-alert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          density="compact"
+        >
+          {{ error }}
+        </v-alert>
 
-            variant="outlined"
-            @click:append-inner="visible = !visible"
-          ></v-text-field>
+        <v-btn
+          class="mb-8 mt-15"
+          color="blue"
+          size="large"
+          variant="tonal"
+          block
+          type="submit"
+          :loading="isLoading"
+          :disabled="isLoading"
+        >
+          {{ $t("loginForm.login") }}
+        </v-btn>
 
-          <v-alert
-            v-if="error"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-            density="compact"
-          >
-            {{ error }}
-          </v-alert>
+        <h4 class="text-subtitle-1 text-center mt-15 mb-1 pt-8">
+          {{ $t("loginForm.notAlreadyRegistered") }}
+        </h4>
 
-          <v-btn
-            class="mb-8 mt-15"
-            color="blue"
-            size="large"
-            variant="tonal"
-            block
-            type="submit"
-            :loading="isLoading"
-            :disabled="isLoading"
-          >
-            {{ $t("loginForm.login") }}
-          </v-btn>
-
-          <h4 class="text-subtitle-1 text-center mt-15 mb-1 pt-8">
-            {{ $t("loginForm.notAlreadyRegistered") }}
-          </h4>
-
-          <v-card-text class="text-center">
-            <router-link to="/signup" class="text-blue text-decoration-none">
-              {{ $t("loginForm.signup") }}
-              <v-icon icon="mdi-chevron-right"></v-icon>
-            </router-link> </v-card-text
-        ></v-form>
-      </v-card>
-    </div>
-  </v-main>
+        <v-card-text class="text-center">
+          <router-link to="/signup" class="text-blue text-decoration-none">
+            {{ $t("loginForm.signup") }}
+            <v-icon icon="mdi-chevron-right"></v-icon>
+          </router-link> </v-card-text
+      ></v-form>
+    </v-card>
+  </div>
 </template>
 
 <script setup>
@@ -149,8 +145,7 @@ const submitForm = handleSubmit(async (values) => {
         }`;
       }
     } else if (err.request) {
-      error.value =
-        "Nessuna risposta dal server. Il backend potrebbe non essere in esecuzione o non raggiungibile.";
+      error.value = t("loginForm.loginError");
     } else {
       error.value =
         err.message || "Si è verificato un errore inatteso durante il login.";

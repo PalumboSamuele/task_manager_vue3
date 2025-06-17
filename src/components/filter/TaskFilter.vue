@@ -3,30 +3,16 @@
     <!-- Sidebar fixed -->
     <v-col cols="12" md="3">
       <div class="fixed-sidebar">
-        <v-row>
-          <v-col cols="5" class="pr-0">
-            <v-btn
-              class="mt-4"
-              color="secondary"
-              @click="emitChangeDataViewMode('data-table')"
-              block
-            >
-              To table
-              <v-icon icon="mdi-table-of-contents" end size="x-large"></v-icon>
-            </v-btn>
-          </v-col>
-          <v-col cols="7">
-            <v-btn
-              class="mt-4"
-              color="primary"
-              append-icon="mdi-plus"
-              @click="addTaskEmit"
-              block
-            >
-              Aggiungi Task
-            </v-btn>
-          </v-col>
-        </v-row>
+        <v-btn
+          class="mt-4"
+          color="primary"
+          append-icon="mdi-plus"
+          @click="addTaskEmit"
+          block
+        >
+          {{ $t("taskFilter.addTask") }}
+        </v-btn>
+
         <v-card class="mt-4" elevation="2">
           <v-card-title>{{
             $t("taskFilter.filterHeaderMessage")
@@ -52,7 +38,10 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
 
-            <v-expansion-panel title="Data di scadenza">
+            <v-expansion-panel>
+              <template #title>
+                {{ $t("taskFilter.dueDate") }}
+              </template>
               <template #text>
                 <v-row class="mb-2" align="center">
                   <v-col cols="4">
@@ -74,7 +63,7 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateStart ? formatDate(dateStart) : "Seleziona" }}
+                          {{ dateStart ? formatDate(dateStart) : $t('taskFilter.dateLabel') }}
                         </v-btn>
                       </template>
                       <v-date-picker
@@ -108,7 +97,7 @@
                           append-icon="mdi-calendar"
                           block
                         >
-                          {{ dateEnd ? formatDate(dateEnd) : "Seleziona" }}
+                          {{ dateEnd ? formatDate(dateEnd) : $t('taskFilter.dateLabel') }}
                         </v-btn>
                       </template>
                       <v-date-picker
@@ -127,14 +116,17 @@
                     block
                     @click.stop="clearDates"
                   >
-                    Cancella date
+                    {{ $t("taskFilter.removeDate") }}
                   </v-btn>
                 </v-row>
               </template>
             </v-expansion-panel>
 
             <!-- Sort by asc/desc & due date panel -->
-            <v-expansion-panel title="Ordinamento">
+            <v-expansion-panel>
+              <template #title>
+                {{ $t("taskFilter.orderBy") }}
+              </template>
               <template #text>
                 <v-row align="center" justify="start">
                   <v-btn
@@ -188,7 +180,7 @@
                     block
                     @click.stop="clearOrderings"
                   >
-                    Resetta ordinamento
+                    {{ $t("taskFilter.resetSort") }}
                   </v-btn>
                 </v-row>
               </template>
@@ -230,7 +222,7 @@
                 @click:close.stop="removeFilter(filter)"
                 :class="`bg-${getPriorityColor(filter.label)}`"
               >
-                {{ filter.groupTitle }}: {{ filter.label }}
+                {{ filter.groupTitle }} {{ filter.label }}
               </v-chip>
             </v-fade-transition>
           </v-chip-group>
@@ -317,8 +309,8 @@ const sortingMethod = ref([
   { ascending: null as boolean | null },
 ]);
 const filterGroups = ref([
-  { id: 1, title: "Priorità", items: priorities },
-  { id: 2, title: "Stato", items: statuses },
+  { id: 1, title: t("taskFilter.priority"), items: priorities },
+  { id: 2, title: t("taskFilter.status"), items: statuses },
   // { id: 3, title: "Date", items: dates },
   // { id: 4, title: "Ordinamento", items: orderButtons },
 ]);

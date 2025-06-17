@@ -22,16 +22,21 @@
       <div>
         <div class="text-subtitle-2 mb-2 text-grey-lighten-3">
           <span class="d-block">
-            <strong> {{ $t("baseTask.priority") }}</strong> {{ priority }}
+            <strong> {{ $t("baseTask.priority") }}</strong>
+            {{ priorityTranslated }}
           </span>
-          <span class="d-block"> <strong>{{ $t("baseTask.status") }}</strong> {{ status }} </span>
+          <span class="d-block">
+            <strong>{{ $t("baseTask.status") }}</strong> {{ statusTranslated }}
+          </span>
         </div>
 
         <div class="d-block text-truncate mb-2 text-grey-lighten-3">
           <strong>{{ $t("baseTask.description") }}</strong> {{ description }}
         </div>
         <div class="text-caption text-grey-lighten-3">
-          <span> <strong>{{ $t("baseTask.completition") }}</strong> {{ dueDate }} </span>
+          <span>
+            <strong>{{ $t("baseTask.completition") }}</strong> {{ dueDate }}
+          </span>
         </div>
       </div>
 
@@ -48,11 +53,14 @@
 
           <v-btn color="error" class="rounded-pill" @click.stop="emitDelete">
             <v-icon icon="mdi-delete"></v-icon>
-            <span class="button-text">&nbsp; {{ $t("baseTask.button.delete") }}</span>
-
+            <span class="button-text"
+              >&nbsp; {{ $t("baseTask.button.delete") }}</span
+            >
           </v-btn>
         </div>
-        <p class="mt-3 text-white text-caption">{{ $t("baseTask.createdOn") }} {{ createdDate }}</p>
+        <p class="mt-3 text-white text-caption">
+          {{ $t("baseTask.createdOn") }} {{ createdDate }}
+        </p>
       </div>
     </v-card-text>
   </v-card>
@@ -63,8 +71,8 @@ import { computed } from "vue";
 import { useDisplay } from "vuetify";
 import { defineEmits, defineProps } from "vue";
 
-// import { useI18n } from 'vue-i18n'
-// const { locale, t } = useI18n()
+import { useI18n } from "vue-i18n";
+const { locale, t } = useI18n();
 
 const display = useDisplay();
 
@@ -85,21 +93,25 @@ const prioritiesMapENtoIT = {
   MEDIUM: "MEDIA",
   HIGH: "ALTA",
   URGENT: "URGENTE",
-};
+} as const;
 
 const statusesMapENtoIT = {
   IN_PROGRESS: "IN CORSO",
   COMPLETED: "COMPLETATA",
   PENDING: "IN ATTESA",
-};
+} as const;
 
-// const priorityTranslated = computed(() =>
-//   locale.value !== 'en' ? prioritiesMapENtoIT[props.priority!] : props.priority
-// )
+const priorityTranslated = computed(() => {
+  return locale.value !== "en"
+    ? prioritiesMapENtoIT[props.priority as keyof typeof prioritiesMapENtoIT] ?? props.priority
+    : props.priority;
+});
 
-// const statusTranslated = computed(() =>
-//   locale.value !== 'en' ? statusesMapENtoIT[props.status!] : props.status
-// )
+const statusTranslated = computed(() => {
+  return locale.value !== "en"
+    ? statusesMapENtoIT[props.status as keyof typeof statusesMapENtoIT] ?? props.status
+    : props.status;
+});
 
 const priorityColor = computed(() => {
   switch (props.priority) {

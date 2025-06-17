@@ -1,95 +1,93 @@
 <template>
-  <v-main>
-    <div>
-      <v-card
-        class="mx-auto pa-12 pb-6"
-        elevation="10"
-        max-width="480"
-        rounded="lg"
-      >
-        <v-card-title class="text-h5 text-center mb-4">
-          {{ $t("signupForm.messagges") }}
-        </v-card-title>
+  <div class="mt-8">
+    <v-card
+      class="mx-auto pa-12 pb-6"
+      elevation="10"
+      max-width="480"
+      rounded="lg"
+    >
+      <v-card-title class="text-h5 text-center mb-4">
+        {{ $t("signupForm.messagges") }}
+      </v-card-title>
 
-        <v-form @submit.prevent="submitForm">
-          <div class="text-subtitle-1 text-medium-emphasis">Email</div>
-          <v-text-field
-            v-model="email.value.value"
-            density="compact"
-            :placeholder="$t('signupForm.emailExample')"
-            prepend-inner-icon="mdi-email-outline"
-            variant="outlined"
-            :error-messages="email.errorMessage.value"
-            @blur="email.handleBlur"
-          ></v-text-field>
+      <v-form @submit.prevent="submitForm">
+        <div class="text-subtitle-1 text-medium-emphasis">Email</div>
+        <v-text-field
+          v-model="email.value.value"
+          density="compact"
+          :placeholder="$t('signupForm.emailExample')"
+          prepend-inner-icon="mdi-email-outline"
+          variant="outlined"
+          :error-messages="email.errorMessage.value"
+          @blur="email.handleBlur"
+        ></v-text-field>
 
-          <div class="text-subtitle-1 text-medium-emphasis">
-            {{ $t("signupForm.username") }}
-          </div>
-          <v-text-field
-            v-model="username.value.value"
-            density="compact"
-            :placeholder="$t('signupForm.username')"
-            prepend-inner-icon="mdi-account-outline"
-            variant="outlined"
-            :error-messages="username.errorMessage.value"
-            @blur="username.handleBlur"
-          ></v-text-field>
+        <div class="text-subtitle-1 text-medium-emphasis">
+          {{ $t("signupForm.username") }}
+        </div>
+        <v-text-field
+          v-model="username.value.value"
+          density="compact"
+          :placeholder="$t('signupForm.username')"
+          prepend-inner-icon="mdi-account-outline"
+          variant="outlined"
+          :error-messages="username.errorMessage.value"
+          @blur="username.handleBlur"
+        ></v-text-field>
 
-          <div
-            class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
-          >
-            Password
-          </div>
-          <v-text-field
-            v-model="password.value.value"
-            :error-messages="password.errorMessage.value"
-            :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-            :type="visible ? 'text' : 'password'"
-            density="compact"
-            :placeholder="$t('signupForm.placeholderPassword')"
-            prepend-inner-icon="mdi-lock-outline"
-            variant="outlined"
-            @click:append-inner="visible = !visible"
-          ></v-text-field>
+        <div
+          class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
+        >
+          Password
+        </div>
+        <v-text-field
+          v-model="password.value.value"
+          :error-messages="password.errorMessage.value"
+          :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visible ? 'text' : 'password'"
+          density="compact"
+          :placeholder="$t('signupForm.placeholderPassword')"
+          prepend-inner-icon="mdi-lock-outline"
+          variant="outlined"
+          @click:append-inner="visible = !visible"
+        ></v-text-field>
 
-          <v-alert
-            v-if="error"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-            density="compact"
-          >
-            {{ error }}
-          </v-alert>
+        <v-alert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          density="compact"
+        >
+          {{ error }}
+        </v-alert>
 
-          <v-btn
-            class="mb-8 mt-15"
-            color="blue"
-            size="large"
-            variant="tonal"
-            block
-            type="submit"
-            :loading="isLoading"
-            :disabled="isLoading"
-          >
-            {{ $t("signupForm.signup") }}
-          </v-btn>
-        </v-form>
+        <v-btn
+          class="mb-8 mt-7"
+          color="blue"
+          size="large"
+          variant="tonal"
+          block
+          type="submit"
+          :loading="isLoading"
+          :disabled="isLoading"
+        >
+          {{ $t("signupForm.signup") }}
+        </v-btn>
+      </v-form>
 
-        <h4 class="text-subtitle-1 text-center mt-15 mb-1 pt-8">
-          {{ $t("signupForm.alreadyRegistered") }}
-        </h4>
+      <h4 class="text-subtitle-1 text-center mt-5 mb-1 pt-4">
+        {{ $t("signupForm.alreadyRegistered") }}
+      </h4>
 
-        <v-card-text class="text-center">
-          <router-link to="/login" class="text-blue text-decoration-none">
-            {{ $t("signupForm.login") }}
-            <v-icon icon="mdi-chevron-right"></v-icon>
-          </router-link>
-        </v-card-text>
-      </v-card>
-    </div>
-  </v-main>
+      <v-card-text class="text-center">
+        <router-link to="/login" class="text-blue text-decoration-none">
+          {{ $t("signupForm.login") }}
+          <v-icon icon="mdi-chevron-right"></v-icon>
+        </router-link>
+      </v-card-text>
+    </v-card>
+  </div>
 </template>
 
 <script setup>
@@ -150,7 +148,7 @@ const submitForm = handleSubmit(async (values) => {
     await authStore.register(formPayload);
     router.replace("/login"); // Reindirizza l'utente alla pagina di login dopo la registrazione
   } catch (err) {
-    error.value = err.message || "Registrazione fallita. Riprova più tardi."; // Usa t()
+    error.value = t("signupForm.signupError"); // Usa t()
   } finally {
     isLoading.value = false;
   }
