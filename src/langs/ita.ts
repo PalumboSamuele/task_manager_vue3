@@ -123,14 +123,15 @@ const ita: LocaleMessages = {
     messagges: "Entra nel tuo account",
     username: "Nome utente",
     usernameRequired: "Username obbligatorio",
-    usernameInvalid: "Nome utente non valido (almeno 6 caratteri, massimo 32)",
+    usernameInvalid:
+      "Nome utente non valido,deve contenere almeno 8 caratteri e massimo 20",
     placeholderName: "Inserisci nome utente",
     loginError: "il server non risponde",
     password: "Password",
     placeholderPassword: "Inserisci la password",
     passwordRequired: "Password obbligatoria",
     passwordInvalid:
-      "Incorrect password (must be at least 8 characters long and maximum 20)",
+      "password non valida, deve contenere almeno 8 caratteri e massimo 20",
     login: "Accedi",
     notAlreadyRegistered: "Registrati se non hai un account!",
     signup: "Registrati",
