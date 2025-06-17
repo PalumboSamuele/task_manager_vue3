@@ -103,13 +103,15 @@ const statusesMapENtoIT = {
 
 const priorityTranslated = computed(() => {
   return locale.value !== "en"
-    ? prioritiesMapENtoIT[props.priority as keyof typeof prioritiesMapENtoIT] ?? props.priority
+    ? prioritiesMapENtoIT[props.priority as keyof typeof prioritiesMapENtoIT] ??
+        props.priority
     : props.priority;
 });
 
 const statusTranslated = computed(() => {
   return locale.value !== "en"
-    ? statusesMapENtoIT[props.status as keyof typeof statusesMapENtoIT] ?? props.status
+    ? statusesMapENtoIT[props.status as keyof typeof statusesMapENtoIT] ??
+        props.status
     : props.status;
 });
 

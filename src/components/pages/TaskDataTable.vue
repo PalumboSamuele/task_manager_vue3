@@ -1,29 +1,38 @@
 <template>
   <div :class="{ 'blurred-background': dialog || confirmDialog }">
     <v-row class="my-3">
-      <v-btn class="mr-2 ml-3" color="secondary" @click="emitChangeDataViewMode('grid')">
-        To grid
-        <v-icon icon="mdi-dots-grid" end size="x-large"></v-icon>
-      </v-btn>
-      <v-btn color="primary" append-icon="mdi-plus" @click="addTask">
-        Aggiungi Task
-      </v-btn>
+      <v-spacer></v-spacer>
+      <v-text-field
+        v-model="search"
+        density="compact"
+        label="Search"
+        prepend-inner-icon="mdi-magnify"
+        variant="solo-filled"
+        hide-details
+        single-line
+        class="mr-3"
+      ></v-text-field>
     </v-row>
 
     <v-data-table
       :headers="headers"
-      :items="tasks"
-      :sort-by="sortBy"
+      :items="filteredTasks"
+      v-model:search="search"
+      :filter-keys="['title']"
       item-value="taskId"
-      multi-sort
       show-expand
       hide-default-footer
+      disable-sort
     >
       <!-- Resto dei tuoi slot personalizzati -->
-      <template #item.data-table-expand="{ internalItem, isExpanded, toggleExpand }">
+      <template
+        #item.data-table-expand="{ internalItem, isExpanded, toggleExpand }"
+      >
         <v-btn
           v-if="isDescriptionTruncated(internalItem)"
-          :icon="isExpanded(internalItem) ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+          :icon="
+            isExpanded(internalItem) ? 'mdi-eye-off-outline' : 'mdi-eye-outline'
+          "
           class="text-none"
           color="medium-emphasis"
           size="small"
@@ -72,7 +81,9 @@
       </template>
 
       <template #item.priority="{ item }">
-        <div :class="`font-weight-bold text-${getPriorityColor(item.priority)}`">
+        <div
+          :class="`font-weight-bold text-${getPriorityColor(item.priority)}`"
+        >
           {{ item.priority }}
         </div>
       </template>
@@ -96,6 +107,7 @@
       </template>
     </v-data-table>
 
+    <!-- Dialog per creazione/modifica task -->
     <v-dialog v-model="dialog" max-width="600">
       <v-card>
         <v-card-title>{{ dialogTitle }}</v-card-title>
@@ -205,10 +217,13 @@
       </v-card>
     </v-dialog>
 
+    <!-- Dialog di conferma -->
     <v-dialog v-model="confirmDialog" max-width="400">
       <v-card class="pa-4 rounded-xl">
         <v-card-title class="d-flex align-center text-h6">
-          <v-icon class="me-2" color="primary" end>mdi-help-circle-outline</v-icon>
+          <v-icon class="me-2" color="primary" end
+            >mdi-help-circle-outline</v-icon
+          >
           {{ confirmTitle }}
         </v-card-title>
         <v-card-text class="text-body-1 text-high-emphasis">
@@ -240,6 +255,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- Snackbar per notifiche -->
     <v-snackbar
       v-model="snackbar"
       :color="snackbarColor"
@@ -253,60 +269,476 @@
 </template>
 
 <script lang="ts" setup>
-import type { DataTableHeader } from "vuetify";
-import { useTaskStore, type Task } from "../stores/tasks/tasksStore";
+// TASK DATA TABLE
 
-const sortBy = ref([]);
+import type { DataTableHeader } from "vuetify";
+import {
+  useTaskStore,
+  type AddTaskPayload,
+  type Task,
+  type UpdateTaskPayload,
+} from "../stores/tasks/tasksStore";
+import { parse, format, isValid, startOfToday } from "date-fns";
+import { useDisplay } from "vuetify";
+import type { FilterOptions } from "@/components/pages/MainPage.vue";
+
+const today = startOfToday();
+const display = useDisplay();
 const taskStore = useTaskStore();
 
 const headers: DataTableHeader[] = [
-  { title: "Title", key: "title", align: "start", sortable: true },
+  { title: "Title", key: "title", align: "start" },
   {
     title: "Description",
     key: "description",
     align: "start",
-    sortable: true,
     width: "15%",
   },
-  { title: "Priority", key: "priority", align: "start", sortable: true },
-  { title: "Status", key: "status", align: "start", sortable: true },
-  { title: "Due date", key: "dueDate", align: "start", sortable: true },
   {
-    title: "Created on",
-    key: "createdDate",
+    title: "Priority",
+    key: "priority",
     align: "start",
-    sortable: false,
   },
-  {
-    title: "Actions",
-    key: "actions",
-    align: "center",
-    sortable: false,
-  },
+  { title: "Status", key: "status", align: "start" },
+  { title: "Due date", key: "dueDate", align: "start" },
+  { title: "Created on", key: "createdDate", align: "start" },
+  { title: "Actions", key: "actions", align: "center" },
 ];
 
-const tasks = ref<Task[]>([]); // Task visualizzate (filtrate/ordinate)
+// Props ed emit
+const props = defineProps<{ filters: FilterOptions }>();
+const emit = defineEmits(["change-view", "add-task", "edit-task"]);
 
-const emit = defineEmits(["add-task", "edit-task", "change-view"]);
+// Stato locale
+const allTasks = ref<Task[]>([]);
+const filteredTasks = ref<Task[]>([]);
+const search = ref("");
 
+// Stato per dialog
+const dialog = shallowRef(false);
+const selectedTask = ref<Partial<Task>>({});
+const isViewMode = ref(false);
+const modalMode = ref<"create" | "edit" | "view">("create");
+const dateMenu = ref(false);
+const datePickerValue = ref<Date | null>(null);
+
+// Stato per snackbar
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("success");
+
+// Stato per dialog di conferma
+const confirmDialog = ref(false);
+const confirmTitle = ref("");
+const confirmMessage = ref("");
+const confirmCallback = ref<(() => Promise<void>) | null>(null);
+const loadingConfirm = ref(false);
+
+// Stato per l'ordinamento corrente
+const currentSort = ref({
+  field: "",
+  order: "",
+});
+
+// Computed
+const dialogTitle = computed(() =>
+  modalMode.value === "view"
+    ? "Dettagli Task"
+    : modalMode.value === "edit"
+    ? "Modifica Task"
+    : "Crea Nuova Task"
+);
+
+const expandedCharLimit = computed(() => {
+  if (display.smAndDown.value) return 30; // mobile
+  if (display.mdAndDown.value) return 50; // tablet
+  return 70; // desktop
+});
+
+// Funzioni per gestire i filtri
+const applyCurrentFilters = () => {
+  let filtered = [...allTasks.value];
+
+  console.log("TaskDataTable - Applicazione filtri:", props.filters);
+  console.log("TaskDataTable - Tasks originali:", filtered.length);
+
+  // Filtro per stato
+  if (props.filters.statuses && props.filters.statuses.length > 0) {
+    filtered = filtered.filter((task) =>
+      props.filters.statuses.some(
+        (status) => task.status.toUpperCase() === status.toUpperCase()
+      )
+    );
+    console.log("TaskDataTable - Dopo filtro stati:", filtered.length);
+  }
+
+  // Filtro per priorità
+  if (props.filters.priorities && props.filters.priorities.length > 0) {
+    let priorityWeight: Record<string, number> = {
+      LOW: 1,
+      MEDIUM: 2,
+      HIGH: 3,
+      URGENT: 4,
+    };
+
+    filtered = filtered.filter((task) =>
+      props.filters.priorities.some(
+        (priority) => task.priority.toUpperCase() === priority.toUpperCase()
+      )
+    );
+    console.log("TaskDataTable - Dopo filtro priorità:", filtered.length);
+    console.log(
+      "TaskDataTable - Dopo filtro priorità:",
+      filtered.map((item) => item.priority)
+    );
+
+    filtered.sort((a: Task, b: Task) => {
+      const aWeight = priorityWeight[a.priority?.toUpperCase()] || 0;
+      const bWeight = priorityWeight[b.priority?.toUpperCase()] || 0;
+      return aWeight - bWeight;
+    });
+  }
+
+  // Filtro per data di scadenza
+  if (props.filters.dueDateStart || props.filters.dueDateEnd) {
+    filtered = filtered.filter((task) => {
+      const taskDueDate = parseDate(task.dueDate);
+      if (!taskDueDate) return false;
+
+      const startDate = props.filters.dueDateStart
+        ? parseDate(props.filters.dueDateStart)
+        : null;
+      const endDate = props.filters.dueDateEnd
+        ? parseDate(props.filters.dueDateEnd)
+        : null;
+
+      return (
+        (!startDate || taskDueDate >= startDate) &&
+        (!endDate || taskDueDate <= endDate)
+      );
+    });
+    console.log("TaskDataTable - Dopo filtro date:", filtered.length);
+  }
+
+  // Applica l'ordinamento se presente
+  if (currentSort.value.field && currentSort.value.order) {
+    filtered = applySortToTasks(filtered, currentSort.value);
+  }
+
+  filteredTasks.value = filtered;
+  console.log(
+    "TaskDataTable - Tasks filtrati finali:",
+    filteredTasks.value.length
+  );
+};
+
+// Watch per sincronizzare con lo store
 watch(
   () => taskStore.tasks,
   (newTasks) => {
-    tasks.value = Array.isArray(newTasks) ? [...newTasks] : [];
+    console.log("TaskDataTable - Aggiornamento tasks dallo store:", newTasks);
+    allTasks.value = Array.isArray(newTasks) ? [...newTasks] : [];
+    applyCurrentFilters();
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 
+const applySortToTasks = (
+  tasks: Task[],
+  sortOptions: { field: string; order: string }
+) => {
+  const { field, order } = sortOptions;
+
+  if (!field || !order) return tasks;
+
+  const sortedTasks = [...tasks];
+
+  sortedTasks.sort((a, b) => {
+    // Ordinamento per priorità
+    if (field === "priority") {
+      const priorityOrder = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 };
+      const aPriorityKey =
+        a.priority.toUpperCase() as keyof typeof priorityOrder;
+      const bPriorityKey =
+        b.priority.toUpperCase() as keyof typeof priorityOrder;
+
+      const aPriority = priorityOrder[aPriorityKey] || 0;
+      const bPriority = priorityOrder[bPriorityKey] || 0;
+
+      return order === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    }
+
+    // Ordinamento per data di scadenza
+    if (field === "dueDate") {
+      const aDate = parseDate(a.dueDate) || new Date(0);
+      const bDate = parseDate(b.dueDate) || new Date(0);
+
+      return order === "asc"
+        ? aDate.getTime() - bDate.getTime()
+        : bDate.getTime() - aDate.getTime();
+    }
+
+    return 0;
+  });
+
+  return sortedTasks;
+};
+
+// Funzioni esposte al componente padre
+const applyFilters = (filters: FilterOptions) => {
+  console.log("TaskDataTable - applyFilters chiamata con:", filters);
+  // I filtri vengono gestiti automaticamente tramite le props e i watch
+  // Questa funzione è mantenuta per compatibilità con MainPage
+  applyCurrentFilters();
+};
+
+const applySort = (sortOptions: { field: string; order: string }) => {
+  console.log("TaskDataTable - applySort chiamata con:", sortOptions);
+  currentSort.value = { field: sortOptions.field, order: sortOptions.order };
+  applyCurrentFilters();
+};
+
+// Lifecycle
 onBeforeMount(async () => {
+  console.log("TaskDataTable - Caricamento iniziale tasks");
   await taskStore.getTaskList({ forceRefresh: true });
-  tasks.value = [...taskStore.tasks];
 });
 
-function emitEditTask(taskId: string) {
-  emit("edit-task", taskId);
+// Utility functions
+const showSnackbar = (message: string, color = "success") => {
+  snackbarMessage.value = message;
+  snackbarColor.value = color;
+  snackbar.value = true;
+};
+
+const formatDate = (date: Date | null): string => {
+  return date && isValid(date) ? format(date, "dd-MM-yyyy") : "";
+};
+
+const parseDate = (dateString: string): Date | null => {
+  const parsed = parse(dateString, "dd-MM-yyyy", new Date());
+  return isValid(parsed) ? parsed : null;
+};
+
+const updateDueDate = (newDate: Date | null) => {
+  selectedTask.value.dueDate = formatDate(newDate);
+  dateMenu.value = false;
+};
+
+const isDescriptionTruncated = (item: any) => {
+  return item.columns.description?.length > expandedCharLimit.value;
+};
+
+function getPriorityColor(priority: string): string {
+  switch (priority.toUpperCase()) {
+    case "LOW":
+    case "BASSA":
+      return "light-green-darken-1";
+    case "MEDIUM":
+    case "MEDIA":
+      return "orange-darken-1";
+    case "HIGH":
+    case "ALTA":
+      return "red-lighten-1";
+    case "URGENT":
+    case "URGENTE":
+      return "purple-lighten-1";
+    default:
+      return "white";
+  }
 }
 
-function addTaskEmit() {
-  emit("add-task");
-}
+// Task management functions
+const editTask = (taskId: string) => {
+  const task = taskStore.taskById(taskId);
+  if (!task) return;
+
+  selectedTask.value = { ...task };
+  datePickerValue.value = parseDate(task.dueDate);
+  modalMode.value = "edit";
+  isViewMode.value = false;
+  dialog.value = true;
+};
+
+const addTask = () => {
+  selectedTask.value = {
+    taskId: undefined,
+    title: "",
+    description: "",
+    priority: "",
+    status: "",
+    dueDate: "",
+  };
+  datePickerValue.value = null;
+  modalMode.value = "create";
+  isViewMode.value = false;
+  dialog.value = true;
+};
+
+const closeDialog = () => {
+  dialog.value = false;
+  selectedTask.value = {};
+  datePickerValue.value = null;
+  modalMode.value = "create";
+  isViewMode.value = false;
+};
+
+const enableEditMode = () => {
+  modalMode.value = "edit";
+  isViewMode.value = false;
+};
+
+const requestDeleteTask = (taskId: string) => {
+  confirmTitle.value = "Conferma Eliminazione";
+  confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
+  confirmCallback.value = async () => {
+    loadingConfirm.value = true;
+    try {
+      await taskStore.deleteTask({ taskId });
+      showSnackbar("Task eliminata", "error");
+    } catch (error) {
+      showSnackbar("Errore durante l'eliminazione della task", "error");
+    } finally {
+      loadingConfirm.value = false;
+      confirmDialog.value = false;
+    }
+  };
+  confirmDialog.value = true;
+};
+
+const requestSaveEditConfirm = () => {
+  confirmTitle.value = "Conferma Modifica";
+  confirmMessage.value = "Sei sicuro di voler salvare le modifiche apportate?";
+  confirmCallback.value = async () => {
+    loadingConfirm.value = true;
+
+    try {
+      const task = selectedTask.value;
+      if (
+        !task.title ||
+        !task.description ||
+        !task.priority ||
+        !task.status ||
+        !task.dueDate
+      ) {
+        showSnackbar("Compila tutti i campi ", "error");
+        loadingConfirm.value = false;
+        return;
+      }
+
+      const parsedDate = parseDate(task.dueDate);
+      if (!parsedDate) {
+        showSnackbar("Data non valida", "error");
+        loadingConfirm.value = false;
+        return;
+      }
+
+      const formattedDate = formatDate(parsedDate);
+
+      const payload: UpdateTaskPayload = {
+        taskId: task.taskId!,
+        title: task.title,
+        description: task.description,
+        priority: task.priority as UpdateTaskPayload["priority"],
+        status: task.status as UpdateTaskPayload["status"],
+        dueDate: formattedDate,
+      };
+
+      await taskStore.updateTask(payload);
+      showSnackbar("Task modificata", "info");
+      closeDialog();
+    } catch (error) {
+      showSnackbar("Errore durante il salvataggio", "error");
+    } finally {
+      loadingConfirm.value = false;
+      confirmDialog.value = false;
+    }
+  };
+  confirmDialog.value = true;
+};
+
+const saveTaskDirectly = async () => {
+  const task = selectedTask.value;
+  if (
+    !task.title ||
+    !task.description ||
+    !task.priority ||
+    !task.status ||
+    !task.dueDate
+  ) {
+    showSnackbar("Compila tutti i campi", "error");
+    return;
+  }
+
+  const parsedDate = parseDate(task.dueDate);
+  if (!parsedDate) {
+    showSnackbar("Data non valida", "error");
+    return;
+  }
+
+  const formattedDate = formatDate(parsedDate);
+
+  try {
+    const payload: AddTaskPayload = {
+      title: task.title,
+      description: task.description,
+      priority: task.priority as AddTaskPayload["priority"],
+      status: task.status.toLowerCase() as AddTaskPayload["status"],
+      dueDate: formattedDate,
+    };
+
+    await taskStore.addTask(payload);
+    showSnackbar("Task creata", "success");
+    closeDialog();
+  } catch {
+    showSnackbar("Errore durante la creazione della task", "error");
+  }
+};
+
+const onSaveClick = () => {
+  if (modalMode.value === "create") {
+    saveTaskDirectly();
+  } else if (modalMode.value === "edit") {
+    requestSaveEditConfirm();
+  }
+};
+
+const cancelConfirm = () => {
+  confirmDialog.value = false;
+  confirmCallback.value = null;
+};
+
+const confirmAction = async () => {
+  if (confirmCallback.value) {
+    await confirmCallback.value();
+  }
+};
+
+// Watch per i filtri dalle props
+watch(
+  () => props.filters,
+  (newFilters) => {
+    console.log(
+      "TaskDataTable - Ricevuti nuovi filtri dalle props:",
+      newFilters
+    );
+    applyCurrentFilters();
+  },
+  { deep: true, immediate: true }
+);
+
+// Espone le funzioni al componente padre
+defineExpose({
+  addTask,
+  editTask,
+  applyFilters,
+  applySort,
+});
 </script>
+
+<style scoped>
+.blurred-background {
+  filter: blur(2px);
+  transition: filter 0.3s ease-in-out;
+}
+</style>
