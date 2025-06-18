@@ -20,6 +20,7 @@
             v-else
             ref="taskDataTableRef"
             :filters="currentFilters"
+            :sort-options="sortOptions"
             @add-task="handleAddTask"
             @edit-task="handleEditTask"
             @change-view="changeViewMode"
@@ -31,23 +32,18 @@
 </template>
 
 <script setup lang="ts">
-// MAINPAGE
-
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
+import { ref, nextTick } from "vue";
 
 const taskStore = useTaskStore();
 const modeGrid = computed(() => taskStore.getVisualizationMode === "grid");
-const sortOptions = ref({
-  field: "",
-  order: "",
-});
 
-// Definizione dei tipi
-export type FilterOptions = {
-  statuses: string[]; // non optional
-  priorities: ("LOW" | "MEDIUM" | "HIGH" | "URGENT")[]; // non optional
-  dueDateStart: string | null; // non optional
-  dueDateEnd: string | null; // non optional
+// Tipi
+type FilterOptions = {
+  statuses: string[];
+  priorities: ("LOW" | "MEDIUM" | "HIGH" | "URGENT")[];
+  dueDateStart: string | null;
+  dueDateEnd: string | null;
 };
 
 type SortOptions = {
@@ -55,30 +51,20 @@ type SortOptions = {
   order: "asc" | "desc" | "";
 };
 
-// Ref per i componenti
-const taskListRef = ref<{
-  addTask: () => void;
-  editTask: (taskId: string) => void;
-  applyFilters: (filters: FilterOptions) => void;
-  applySort: (options: SortOptions) => void;
-}>();
-
-const taskDataTableRef = ref<{
-  addTask: () => void;
-  editTask: (taskId: string) => void;
-  applyFilters: (filters: FilterOptions) => void;
-  applySort: (options: SortOptions) => void;
-}>();
-
-// Stato dei filtri centralizzato
+// Stato
 const currentFilters = ref<FilterOptions>({
   statuses: [],
   priorities: [],
   dueDateStart: null,
   dueDateEnd: null,
 });
+const sortOptions = ref<SortOptions>({ field: "", order: "" });
 
-// Gestione dell'evento add-task
+// Ref per i componenti
+const taskListRef = ref<any>(null);
+const taskDataTableRef = ref<any>(null);
+
+// Gestione eventi
 const handleAddTask = () => {
   const activeComponent = modeGrid.value
     ? taskListRef.value
@@ -86,23 +72,14 @@ const handleAddTask = () => {
   activeComponent?.addTask();
 };
 
-// Gestione dei filtri
 const handleFilterChange = (filters: FilterOptions) => {
   console.log("MainPage - Ricevuti filtri:", filters);
   currentFilters.value = { ...filters };
 };
 
-// Gestione dell'ordinamento
-const handleSortChange = (sortOptions: SortOptions) => {
-  console.log("MainPage - Ricevuto nuovo ordinamento:", sortOptions);
-
-  // Applica l'ordinamento al componente attivo
-  const activeComponent = modeGrid.value
-    ? taskListRef.value
-    : taskDataTableRef.value;
-  if (activeComponent?.applySort) {
-    activeComponent.applySort(sortOptions);
-  }
+const handleSortChange = (newSort: SortOptions) => {
+  console.log("MainPage - Ricevuto nuovo ordinamento:", newSort);
+  sortOptions.value = { ...newSort };
 };
 
 const handleEditTask = (taskId: string) => {
@@ -115,8 +92,6 @@ const handleEditTask = (taskId: string) => {
 const changeViewMode = (mode: "grid" | "data-table") => {
   console.log("MainPage - Cambio modalità:", mode);
   taskStore.setVisualizationMode(mode);
-
-  // Dopo il cambio di modalità, riapplica i filtri al nuovo componente
   nextTick(() => {
     const activeComponent =
       mode === "grid" ? taskListRef.value : taskDataTableRef.value;

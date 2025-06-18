@@ -51,7 +51,11 @@
             <span class="button-text">{{ $t("baseTask.button.modify") }}</span>
           </v-btn>
 
-          <v-btn color="primary" class="rounded-pill" @click.stop="emitDelete">
+          <v-btn
+            color="red-darken-4"
+            class="rounded-pill"
+            @click.stop="emitDelete"
+          >
             <v-icon icon="mdi-delete"></v-icon>
             <span class="button-text"
               >&nbsp; {{ $t("baseTask.button.delete") }}</span
@@ -73,8 +77,6 @@ import { defineEmits, defineProps } from "vue";
 
 import { useI18n } from "vue-i18n";
 const { locale, t } = useI18n();
-
-const display = useDisplay();
 
 const props = defineProps({
   taskId: String,
