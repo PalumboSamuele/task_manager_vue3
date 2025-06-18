@@ -92,12 +92,5 @@ const handleEditTask = (taskId: string) => {
 const changeViewMode = (mode: "grid" | "data-table") => {
   console.log("MainPage - Cambio modalità:", mode);
   taskStore.setVisualizationMode(mode);
-  nextTick(() => {
-    const activeComponent =
-      mode === "grid" ? taskListRef.value : taskDataTableRef.value;
-    if (activeComponent?.applyFilters) {
-      activeComponent.applyFilters(currentFilters.value);
-    }
-  });
 };
 </script>

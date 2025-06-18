@@ -651,16 +651,10 @@ const confirmAction = async () => {
   }
 };
 
-// Funzioni esposte al componente padre (vuote per compatibilità)
-const applyFilters = () => {};
-const applySort = () => {};
-
 // Espone le funzioni al componente padre
 defineExpose({
   addTask,
-  editTask,
-  applyFilters,
-  applySort,
+  editTask
 });
 </script>
 

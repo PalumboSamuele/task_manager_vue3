@@ -579,12 +579,6 @@ const confirmAction = async () => {
 defineExpose({
   addTask,
   editTask,
-  applyFilters: (filters: typeof props.filters) => {
-    // Non necessario con computed, mantenuto per compatibilità
-  },
-  applySort: (sortOptions: typeof props.sortOptions) => {
-    // Non necessario con computed, mantenuto per compatibilità
-  },
 });
 </script>
 
