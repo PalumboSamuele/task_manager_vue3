@@ -75,6 +75,8 @@ export interface LocaleMessages {
     descending: string;
     clearFilter: string;
     mobileTitle: string;
+    grid: string;
+    table: string;
     statusFilter: {
       inProgress: string;
       completed: string;
@@ -98,6 +100,7 @@ export interface LocaleMessages {
       delete: string;
     };
     createdOn: string;
+    actions: string;
   };
   signupForm: {
     messagges: string;

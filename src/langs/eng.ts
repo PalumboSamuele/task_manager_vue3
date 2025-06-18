@@ -76,6 +76,8 @@ const eng: LocaleMessages = {
     descending: "Descending",
     clearFilter: "clear filters",
     mobileTitle: "Filter",
+    grid: "To Grid",
+    table: "To Table",
     statusFilter: {
       inProgress: "IN PROGRESS",
       completed: "COMPLETED",
@@ -99,6 +101,7 @@ const eng: LocaleMessages = {
       delete: "Delete",
     },
     createdOn: "Created on: ",
+    actions: "Actions:",
   },
   signupForm: {
     messagges: "Create your Account",

@@ -15,7 +15,7 @@
               "
               block
             >
-              {{ modeGrid ? "To table" : "To grid" }}
+              {{ modeGrid ? t("taskFilter.table") : t("taskFilter.grid") }}
               <v-icon
                 v-if="modeGrid"
                 icon="mdi-table-of-contents"
@@ -429,7 +429,7 @@
     <v-col :cols="isMobile ? 12 : 12" :md="isMobile ? 12 : 9">
       <!-- bottone filtri per mobile -->
       <v-card v-if="isMobile" variant="flat" color="transparent">
-        <v-card-text class="py-2 mb-1" >
+        <v-card-text class="py-2 mb-1">
           <div class="d-flex flex-column flex-sm-row gap-3">
             <v-btn
               color="primary"

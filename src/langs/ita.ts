@@ -76,6 +76,8 @@ const ita: LocaleMessages = {
     descending: "Discendente",
     clearFilter: "elimina filtri",
     mobileTitle: "Filtri",
+    grid: "Griglia",
+    table: "Tabella",
     statusFilter: {
       inProgress: "IN CORSO",
       completed: "COMPLETATO",
@@ -99,6 +101,7 @@ const ita: LocaleMessages = {
       delete: "Elimina",
     },
     createdOn: "Creato il: ",
+    actions: "Azioni:",
   },
   signupForm: {
     messagges: "Crea il tuo Account",
