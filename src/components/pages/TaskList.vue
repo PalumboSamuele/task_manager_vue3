@@ -9,26 +9,28 @@
         <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
         <h3 class="text-h6 mt-3">
           {{
+
             filteredAndSortedTasks.length === 0 && originalTasks.length !== 0
-              ? "Nessuna task con queste caratteristiche è stata trovata"
-              : "Task non trovate"
+              ? $t("taskList.taskFilt")
+              : $t("taskList.noTask")
+
           }}
         </h3>
-        <p>Inizia ad aggiungere una nuova task!</p>
+        <p>{{ $t("taskList.addMess") }}</p>
         <v-btn
           class="mt-4"
           color="primary"
           append-icon="mdi-plus"
           @click="addTask"
         >
-          Aggiungi Task
+          {{ $t("taskList.addTask") }}
         </v-btn>
       </v-col>
       <Draggable
         v-model="filteredAndSortedTasks"
         item-key="taskId"
         handle=".drag-handle"
-        class="d-flex flex-wrap w-100"
+        class="d-flex flex-wrap w-100 px-4"
         :animation="200"
       >
         <template #item="{ element: task }">
@@ -52,11 +54,153 @@
 
     <!-- Dialog e altri elementi rimangono invariati -->
     <v-dialog v-model="dialog" max-width="600">
-      <!-- ... Contenuto del dialog invariato ... -->
+      <v-card>
+        <v-card-title>{{ dialogTitle }}</v-card-title>
+
+        <v-card-text v-if="selectedTask">
+          <v-row dense>
+            <v-col cols="12">
+              <v-text-field
+                :label="t('taskList.modal.title')"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.title"
+                :readonly="isViewMode"
+                :rules="titleRules"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-textarea
+                :label="t('taskList.modal.description')"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.description"
+                :readonly="isViewMode"
+                :rules="descriptionRules"
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                :label="t('taskList.modal.selectPriority')"
+                :items="priorityOptions"
+                item-title="text"
+                item-value="value"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.priority"
+                :readonly="isViewMode"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                :label="t('taskList.modal.selectStatus')"
+                :items="statusOptions"
+                item-title="text"
+                item-value="value"
+                color="deep-purple-accent-3"
+                v-model="selectedTask.status"
+                :readonly="isViewMode"
+                required
+                variant="outlined"
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-menu
+                v-model="dateMenu"
+                :close-on-content-click="false"
+                transition="scroll-y-transition"
+                offset-y
+                :readonly="isViewMode"
+              >
+                <template v-slot:activator="{ props: menuProps }">
+                  <v-text-field
+                    :label="t('taskFilter.dueDate')"
+                    color="deep-purple-accent-3"
+                    innericon="mdi-calendar"
+                    v-model="selectedTask.dueDate"
+                    v-bind="menuProps"
+                    :readonly="isViewMode"
+                    required
+                    variant="outlined"
+                  />
+                </template>
+                <v-date-picker
+                  v-if="!isViewMode"
+                  :min="today"
+                  v-model="datePickerValue"
+                  color="deep-purple-accent-3"
+                  @update:model-value="updateDueDate"
+                />
+              </v-menu>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-divider />
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            :text="t('taskList.modal.closeModal')"
+            color="red-accent-4"
+            variant="flat"
+            @click="closeDialog"
+            :disabled="confirmDialog"
+          />
+          <v-btn
+            v-if="isViewMode"
+            color="light-blue-accent-4"
+            :text="t('taskList.modal.edit')"
+            variant="tonal"
+            @click="enableEditMode"
+            :disabled="confirmDialog"
+          />
+          <v-btn
+            v-else
+            color="light-blue-accent-4"
+            :text="t('taskList.modal.okTitleSave')"
+            variant="tonal"
+            @click="onSaveClick"
+            :disabled="confirmDialog"
+          />
+        </v-card-actions>
+      </v-card>
     </v-dialog>
 
     <v-dialog v-model="confirmDialog" max-width="400">
-      <!-- ... Contenuto del confirmDialog invariato ... -->
+      <v-card class="pa-4 rounded-xl">
+        <v-card-title class="d-flex align-center text-h6">
+          <v-icon class="me-2" color="primary">mdi-help-circle-outline</v-icon>
+          {{ confirmTitle }}
+        </v-card-title>
+        <v-card-text class="text-body-1 text-high-emphasis">
+          {{ confirmMessage }}
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-card-actions class="justify-end pt-4">
+            <v-btn
+              variant="elevated"
+              color="error"
+              @click="cancelConfirm"
+              :disabled="loadingConfirm"
+            >
+              {{ $t("taskList.modal.cancel") }}
+            </v-btn>
+            <v-btn
+              variant="elevated"
+              color="light-blue-accent-3"
+              @click="confirmAction"
+              :loading="loadingConfirm"
+              class="ms-2"
+            >
+              {{ $t("taskList.modal.confirm") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
 
     <v-snackbar
@@ -73,6 +217,7 @@
 
 <script lang="ts" setup>
 import Draggable from "vuedraggable";
+import { useDisplay } from "vuetify";
 import {
   useTaskStore,
   type Task,
@@ -81,9 +226,9 @@ import {
 } from "../stores/tasks/tasksStore";
 import { parse, format, isValid, startOfToday } from "date-fns";
 import { useI18n } from "vue-i18n";
-import { computed } from "vue";
 
 const today = startOfToday();
+const display = useDisplay();
 const taskStore = useTaskStore();
 const { t } = useI18n();
 
@@ -103,6 +248,28 @@ const props = defineProps<{
 
 const emit = defineEmits(["add-task", "edit-task"]);
 
+const statusOptions = computed(() => [
+  { value: "PENDING", text: t("taskFilter.statusFilter.pending") },
+  { value: "IN_PROGRESS", text: t("taskFilter.statusFilter.inProgress") },
+  { value: "COMPLETED", text: t("taskFilter.statusFilter.completed") },
+]);
+
+const priorityOptions = computed(() => [
+  { value: "LOW", text: t("taskFilter.priorityFilter.low") },
+  { value: "MEDIUM", text: t("taskFilter.priorityFilter.medium") },
+  { value: "HIGH", text: t("taskFilter.priorityFilter.high") },
+  { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
+]);
+
+const titleRules = [
+  (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
+];
+const descriptionRules = [
+  (v: string) => v.length <= 200 || t("taskList.modal.descriptionValidate"),
+];
+
+//-----------------REACTIVE VARIABLES--------------------
+
 // Stato reattivo
 const originalTasks = ref<Task[]>([]);
 const dialog = shallowRef(false);
@@ -120,11 +287,18 @@ const confirmMessage = ref("");
 const confirmCallback = ref<(() => Promise<void>) | null>(null);
 const loadingConfirm = ref(false);
 
-// Computed per task filtrate e ordinate
+//----------------------COMPUTED------------------------
+const dialogTitle = computed(() =>
+  modalMode.value === "view"
+    ? t("taskList.modal.titleView")
+    : modalMode.value === "edit"
+    ? t("taskList.modal.titleEdit")
+    : t("taskList.modal.titleCreate")
+);
+
 const filteredAndSortedTasks = computed(() => {
   let tasks = [...taskStore.tasks];
 
-  // Applicazione dei filtri
   if (props.filters.statuses.length > 0) {
     tasks = tasks.filter((task) =>
       props.filters.statuses.some(
@@ -158,7 +332,6 @@ const filteredAndSortedTasks = computed(() => {
     });
   }
 
-  // Definizione dei pesi delle priorità
   const priorityOrder: Record<string, number> = {
     LOW: 1,
     MEDIUM: 2,
@@ -166,7 +339,6 @@ const filteredAndSortedTasks = computed(() => {
     URGENT: 4,
   };
 
-  // Ordinamento di default per priorità se il filtro è attivo
   if (props.filters.priorities.length > 0) {
     tasks.sort((a, b) => {
       const aPriority = priorityOrder[a.priority.toUpperCase()] || 0;
@@ -175,7 +347,6 @@ const filteredAndSortedTasks = computed(() => {
     });
   }
 
-  // Applicazione dell'ordinamento
   if (props.sortOptions.field && props.sortOptions.order) {
     tasks.sort((a, b) => {
       if (props.sortOptions.field === "priority") {
@@ -206,6 +377,9 @@ const filteredAndSortedTasks = computed(() => {
 
   return tasks;
 });
+
+
+//----------------------METHODS------------------------
 
 // Inizializzazione
 onBeforeMount(async () => {
@@ -285,15 +459,15 @@ const enableEditMode = () => {
 };
 
 const requestDeleteTask = (taskId: string) => {
-  confirmTitle.value = "Conferma Eliminazione";
-  confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
+  confirmTitle.value = t("taskList.modal.deleteTaskTitle");
+  confirmMessage.value = t("taskList.modal.deleteTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
     try {
       await taskStore.deleteTask({ taskId });
-      showSnackbar("Task eliminata", "error");
+      showSnackbar(t("taskList.toast.toastDeleteMessage"), "error");
     } catch (error) {
-      showSnackbar("Errore durante l'eliminazione della task", "error");
+      showSnackbar(t("taskList.toast.toastErrorDelete"), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -303,8 +477,8 @@ const requestDeleteTask = (taskId: string) => {
 };
 
 const requestSaveEditConfirm = () => {
-  confirmTitle.value = "Conferma Modifica";
-  confirmMessage.value = "Sei sicuro di voler salvare le modifiche apportate?";
+  confirmTitle.value = t("taskList.modal.editTaskTitle");
+  confirmMessage.value = t("taskList.modal.editTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
     try {
@@ -316,13 +490,13 @@ const requestSaveEditConfirm = () => {
         !task.status ||
         !task.dueDate
       ) {
-        showSnackbar("Compila tutti i campi ", "error");
+        showSnackbar(t("taskList.toast.toastCreate"), "error");
         loadingConfirm.value = false;
         return;
       }
       const parsedDate = parseDate(task.dueDate);
       if (!parsedDate) {
-        showSnackbar("Data non valida", "error");
+        showSnackbar(t("taskList.toast.toastDate"), "error");
         loadingConfirm.value = false;
         return;
       }
@@ -336,10 +510,10 @@ const requestSaveEditConfirm = () => {
         dueDate: formattedDate,
       };
       await taskStore.updateTask(payload);
-      showSnackbar("Task modificata", "info");
+      showSnackbar(t("taskList.toast.toastEditMessage"), "info");
       closeDialog();
     } catch (error) {
-      showSnackbar("Errore durante il salvataggio", "error");
+      showSnackbar(t("taskList.toast.toastErrorModify"), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -357,12 +531,12 @@ const saveTaskDirectly = async () => {
     !task.status ||
     !task.dueDate
   ) {
-    showSnackbar("Compila tutti i campi", "error");
+    showSnackbar(t("taskList.toast.toastCreate"), "error");
     return;
   }
   const parsedDate = parseDate(task.dueDate);
   if (!parsedDate) {
-    showSnackbar("Data non valida", "error");
+    showSnackbar(t("taskList.toast.toastDate"), "error");
     return;
   }
   const formattedDate = formatDate(parsedDate);
@@ -375,10 +549,10 @@ const saveTaskDirectly = async () => {
       dueDate: formattedDate,
     };
     await taskStore.addTask(payload);
-    showSnackbar("Task creata", "success");
+    showSnackbar(t("taskList.toast.toastAddMessage"), "success");
     closeDialog();
   } catch {
-    showSnackbar("Errore durante la creazione della task", "error");
+    showSnackbar(t("taskLost.toast.toastErrorAdd"), "error");
   }
 };
 
