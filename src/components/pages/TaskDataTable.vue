@@ -87,7 +87,7 @@
           {{ getTranslatedPriority(item.priority) }}
         </div>
       </template>
-      
+
       <template #item.status="{ item }">
         <div>
           {{ getTranslatedStatus(item.status) }}
@@ -291,6 +291,7 @@ import {
 import { parse, format, isValid, startOfToday } from "date-fns";
 import { useDisplay, type DataTableHeader } from "vuetify";
 import { useI18n } from "vue-i18n";
+import type { DataTableItem } from "vuetify/lib/components/VDataTable/types.mjs";
 
 const { t } = useI18n();
 
@@ -488,12 +489,14 @@ const dialogTitle = computed(() =>
 );
 
 const expandedCharLimit = computed(() => {
-  if (display.smAndDown.value) return 30; // mobile
-  if (display.mdAndDown.value) return 50; // tablet
-  return 70; // desktop
+  if (display.smAndDown.value) return 30;
+  else if (display.mdAndDown.value) return 50;
+  else return 70;
+});
+watch(expandedCharLimit, (newLimit) => {
+  console.log("expandedCharLimit changed to:", newLimit);
 });
 
-// Watch per aggiornare allTasks quando lo store cambia
 watch(
   () => taskStore.tasks,
   (newTasks) => {
@@ -528,8 +531,8 @@ const updateDueDate = (newDate: Date | null) => {
   dateMenu.value = false;
 };
 
-const isDescriptionTruncated = (item: any) => {
-  return item.description?.length > expandedCharLimit.value;
+const isDescriptionTruncated = (item: DataTableItem) => {
+  return item.raw.description.length > expandedCharLimit.value;
 };
 
 function getPriorityColor(priority: string): string {
@@ -712,7 +715,7 @@ const confirmAction = async () => {
 // Espone le funzioni al componente padre
 defineExpose({
   addTask,
-  editTask
+  editTask,
 });
 </script>
 
