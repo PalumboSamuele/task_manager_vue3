@@ -66,6 +66,7 @@
                 v-model="selectedTask.title"
                 :readonly="isViewMode"
                 :rules="titleRules"
+                :error-messages="titleError"
                 required
                 variant="outlined"
               />
@@ -77,6 +78,7 @@
                 v-model="selectedTask.description"
                 :readonly="isViewMode"
                 :rules="descriptionRules"
+                :error-messages="descriptionError"
                 variant="outlined"
               />
             </v-col>
@@ -227,6 +229,7 @@ import {
 import { parse, format, isValid, startOfToday } from "date-fns";
 import { useI18n } from "vue-i18n";
 
+
 const today = startOfToday();
 const display = useDisplay();
 const taskStore = useTaskStore();
@@ -261,8 +264,9 @@ const priorityOptions = computed(() => [
   { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
 ]);
 
+// Aggiornate le regole di validazione
 const titleRules = [
-  (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
+  (v: string) => v.length <= 50 || t("taskList.modal.titleValidate"),
 ];
 const descriptionRules = [
   (v: string) => v.length <= 200 || t("taskList.modal.descriptionValidate"),
@@ -286,6 +290,10 @@ const confirmTitle = ref("");
 const confirmMessage = ref("");
 const confirmCallback = ref<(() => Promise<void>) | null>(null);
 const loadingConfirm = ref(false);
+
+// Nuove variabili per i messaggi di errore
+const titleError = ref("");
+const descriptionError = ref("");
 
 //----------------------COMPUTED------------------------
 const dialogTitle = computed(() =>
@@ -387,6 +395,38 @@ onBeforeMount(async () => {
   originalTasks.value = [...taskStore.tasks];
 });
 
+// Nuova funzione per validare i campi
+const validateFields = (): boolean => {
+  let isValid = true;
+  
+  // Reset errori
+  titleError.value = "";
+  descriptionError.value = "";
+
+  const task = selectedTask.value;
+  
+  // Validazione titolo
+  if (!task.title || task.title.trim() === "") {
+    isValid = false;
+  } else if (task.title.length > 50) {
+    isValid = false;
+  }
+
+  // Validazione descrizione
+  if (!task.description || task.description.trim() === "") {
+    isValid = false;
+  } else if (task.description.length > 200) {
+    isValid = false;
+  }
+
+  // Se non è valido, mostra il messaggio generale
+  if (!isValid) {
+    showSnackbar("Tutti i campi sono obbligatori e devono rispettare i limiti di caratteri", "error");
+  }
+
+  return isValid;
+};
+
 // Metodi (rimangono invariati rispetto al codice originale)
 const showSnackbar = (message: string, color = "success") => {
   snackbarMessage.value = message;
@@ -416,6 +456,8 @@ const viewTask = (taskId: string) => {
   modalMode.value = "view";
   isViewMode.value = true;
   dialog.value = true;
+  // Reset errori quando si apre in modalità view
+  resetValidationErrors();
 };
 
 const editTask = (taskId: string) => {
@@ -427,6 +469,7 @@ const editTask = (taskId: string) => {
   isViewMode.value = false;
   dialog.value = true;
   emit("edit-task", taskId);
+
 };
 
 const addTask = () => {
@@ -443,6 +486,15 @@ const addTask = () => {
   isViewMode.value = false;
   dialog.value = true;
   emit("add-task");
+  // Reset errori quando si crea un nuovo task
+  resetValidationErrors();
+};
+
+// Nuova funzione per resettare gli errori di validazione
+const resetValidationErrors = () => {
+  titleError.value = "";
+  descriptionError.value = "";
+
 };
 
 const closeDialog = () => {
@@ -451,11 +503,13 @@ const closeDialog = () => {
   datePickerValue.value = null;
   modalMode.value = "create";
   isViewMode.value = false;
+  resetValidationErrors();
 };
 
 const enableEditMode = () => {
   modalMode.value = "edit";
   isViewMode.value = false;
+  resetValidationErrors();
 };
 
 const requestDeleteTask = (taskId: string) => {
@@ -477,34 +531,23 @@ const requestDeleteTask = (taskId: string) => {
 };
 
 const requestSaveEditConfirm = () => {
+  // Prima valida i campi
+  if (!validateFields()) {
+    return;
+  }
+
   confirmTitle.value = t("taskList.modal.editTaskTitle");
   confirmMessage.value = t("taskList.modal.editTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
     try {
       const task = selectedTask.value;
-      if (
-        !task.title ||
-        !task.description ||
-        !task.priority ||
-        !task.status ||
-        !task.dueDate
-      ) {
-        showSnackbar(t("taskList.toast.toastCreate"), "error");
-        loadingConfirm.value = false;
-        return;
-      }
-      const parsedDate = parseDate(task.dueDate);
-      if (!parsedDate) {
-        showSnackbar(t("taskList.toast.toastDate"), "error");
-        loadingConfirm.value = false;
-        return;
-      }
+      const parsedDate = parseDate(task.dueDate!);
       const formattedDate = formatDate(parsedDate);
       const payload: UpdateTaskPayload = {
         taskId: task.taskId!,
-        title: task.title,
-        description: task.description,
+        title: task.title!,
+        description: task.description!,
         priority: task.priority as UpdateTaskPayload["priority"],
         status: task.status as UpdateTaskPayload["status"],
         dueDate: formattedDate,
@@ -555,6 +598,7 @@ const saveTaskDirectly = async () => {
     showSnackbar(t("taskLost.toast.toastErrorAdd"), "error");
   }
 };
+
 
 const onSaveClick = () => {
   if (modalMode.value === "create") {

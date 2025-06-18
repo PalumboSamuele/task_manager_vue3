@@ -430,13 +430,13 @@
       <!-- bottone filtri per mobile -->
       <v-card v-if="isMobile" variant="flat" color="transparent">
         <v-card-text class="py-2 mb-1">
-          <div class="d-flex flex-column flex-sm-row gap-3">
+          <div class="d-flex flex-column flex-sm-row">
             <v-btn
               color="primary"
               append-icon="mdi-filter-variant"
               @click="mobileDrawer = true"
               variant="tonal"
-              class="flex-grow-1 flex-sm-grow-0"
+              class="flex-grow-1 flex-sm-grow-0 mb-4 mr-sm-4"
             >
               {{ $t("taskFilter.mobileTitle") }}
             </v-btn>

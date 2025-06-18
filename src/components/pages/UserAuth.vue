@@ -99,14 +99,10 @@ const { handleSubmit } = useForm({
   validationSchema: {
     username(value) {
       if (!value) return t("loginForm.usernameRequired");
-      if (value.length < 3) return t("loginForm.usernameInvalid");
-      if (value.length > 32) return t("loginForm.usernameInvalid");
       return true;
     },
     password(value) {
       if (!value) return t("loginForm.passwordRequired");
-      if (value.length < 8) return t("loginForm.passwordInvalid");
-      if (value.length > 20) return t("loginForm.passwordInvalid");
       return true;
     },
   },
