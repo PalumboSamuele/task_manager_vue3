@@ -3,15 +3,17 @@
     <v-row justify="space-evenly">
       <v-col
         cols="12"
-        v-if="originalTasks.length === 0 || localTasks.length === 0"
+        v-if="originalTasks.length === 0 || filteredAndSortedTasks.length === 0"
         class="text-center mt-15"
       >
         <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
         <h3 class="text-h6 mt-3">
           {{
-            localTasks.length === 0 && originalTasks.length !== 0
+
+            filteredAndSortedTasks.length === 0 && originalTasks.length !== 0
               ? $t("taskList.taskFilt")
               : $t("taskList.noTask")
+
           }}
         </h3>
         <p>{{ $t("taskList.addMess") }}</p>
@@ -25,7 +27,7 @@
         </v-btn>
       </v-col>
       <Draggable
-        v-model="localTasks"
+        v-model="filteredAndSortedTasks"
         item-key="taskId"
         handle=".drag-handle"
         class="d-flex flex-wrap w-100 px-4"
@@ -50,6 +52,7 @@
       </Draggable>
     </v-row>
 
+    <!-- Dialog e altri elementi rimangono invariati -->
     <v-dialog v-model="dialog" max-width="600">
       <v-card>
         <v-card-title>{{ dialogTitle }}</v-card-title>
@@ -213,8 +216,6 @@
 </template>
 
 <script lang="ts" setup>
-// TASKLIST
-
 import Draggable from "vuedraggable";
 import { useDisplay } from "vuetify";
 import {
@@ -226,10 +227,27 @@ import {
 import { parse, format, isValid, startOfToday } from "date-fns";
 import { useI18n } from "vue-i18n";
 
-const { t } = useI18n();
 const today = startOfToday();
 const display = useDisplay();
 const taskStore = useTaskStore();
+const { t } = useI18n();
+
+// Props con tipizzazione esplicita
+const props = defineProps<{
+  filters: {
+    statuses: string[];
+    priorities: string[];
+    dueDateStart: string | null;
+    dueDateEnd: string | null;
+  };
+  sortOptions: {
+    field: string;
+    order: "asc" | "desc" | "";
+  };
+}>();
+
+const emit = defineEmits(["add-task", "edit-task"]);
+
 const statusOptions = computed(() => [
   { value: "PENDING", text: t("taskFilter.statusFilter.pending") },
   { value: "IN_PROGRESS", text: t("taskFilter.statusFilter.inProgress") },
@@ -243,20 +261,6 @@ const priorityOptions = computed(() => [
   { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
 ]);
 
-// Layout a lista per mobile
-const column = computed(() => {
-  switch (true) {
-    case display.smAndDown.value:
-      return 12; // Full width per layout a lista in mobile
-    case display.md.value:
-      return 6; // 2 colonne su tablet
-    case display.lgAndUp.value:
-      return 4; // 3 colonne su desktop
-    default:
-      return 12;
-  }
-});
-
 const titleRules = [
   (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
 ];
@@ -266,34 +270,17 @@ const descriptionRules = [
 
 //-----------------REACTIVE VARIABLES--------------------
 
-// Aggiunta: Stato per i filtri attivi
-const activeFilters = ref({
-  statuses: [] as string[],
-  priorities: [] as string[],
-  dateRange: { start: "", end: "" },
-});
-
-// Stato per l'ordinamento corrente
-const currentSort = ref({
-  field: "",
-  order: "",
-});
-
-const originalTasks = ref<Task[]>([]); // Mantiene una copia delle task originali
-const localTasks = ref<Task[]>([]); // Task visualizzate (filtrate/ordinate)
-
+// Stato reattivo
+const originalTasks = ref<Task[]>([]);
 const dialog = shallowRef(false);
 const selectedTask = ref<Partial<Task>>({});
 const isViewMode = ref(false);
 const modalMode = ref<"create" | "edit" | "view">("create");
-
 const dateMenu = ref(false);
 const datePickerValue = ref<Date | null>(null);
-
 const snackbar = ref(false);
 const snackbarMessage = ref("");
 const snackbarColor = ref("success");
-
 const confirmDialog = ref(false);
 const confirmTitle = ref("");
 const confirmMessage = ref("");
@@ -309,77 +296,35 @@ const dialogTitle = computed(() =>
     : t("taskList.modal.titleCreate")
 );
 
-//----------------------WATCHES------------------------
+const filteredAndSortedTasks = computed(() => {
+  let tasks = [...taskStore.tasks];
 
-watch(
-  () => selectedTask.value?.dueDate,
-  (newVal) => {
-    datePickerValue.value = newVal ? parseDate(newVal) : null;
-  },
-  { immediate: true }
-);
-
-// Aggiorna le task locali quando cambiano quelle nello store
-watch(
-  () => taskStore.tasks,
-  (newTasks) => {
-    originalTasks.value = Array.isArray(newTasks) ? [...newTasks] : [];
-    // Riapplica filtri e ordinamento
-    applyFilters(activeFilters.value);
-    if (currentSort.value.field) {
-      applySort(currentSort.value);
-    }
-  },
-  { deep: true }
-);
-
-//----------------------METHODS------------------------
-
-// Inizializzazione
-onBeforeMount(async () => {
-  await taskStore.getTaskList({ forceRefresh: true });
-  originalTasks.value = [...taskStore.tasks];
-  localTasks.value = [...taskStore.tasks];
-});
-
-// Funzione per applicare i filtri
-const applyFilters = (filters: {
-  statuses?: string[];
-  priorities?: string[];
-  dueDateStart?: string | null;
-  dueDateEnd?: string | null;
-}) => {
-  let filteredTasks = [...originalTasks.value];
-
-  // Filtro per stato (case insensitive)
-  if (filters.statuses && filters.statuses.length > 0) {
-    filteredTasks = filteredTasks.filter((task) =>
-      filters.statuses?.some(
+  if (props.filters.statuses.length > 0) {
+    tasks = tasks.filter((task) =>
+      props.filters.statuses.some(
         (status) => task.status.toUpperCase() === status.toUpperCase()
       )
     );
   }
 
-  // Filtro per priorità (case insensitive)
-  if (filters.priorities && filters.priorities.length > 0) {
-    filteredTasks = filteredTasks.filter((task) =>
-      filters.priorities?.some(
+  if (props.filters.priorities.length > 0) {
+    tasks = tasks.filter((task) =>
+      props.filters.priorities.some(
         (priority) => task.priority.toUpperCase() === priority.toUpperCase()
       )
     );
   }
 
-  // Filtro per data di scadenza
-  if (filters.dueDateStart || filters.dueDateEnd) {
-    filteredTasks = filteredTasks.filter((task) => {
+  if (props.filters.dueDateStart || props.filters.dueDateEnd) {
+    tasks = tasks.filter((task) => {
       const taskDueDate = parseDate(task.dueDate);
       if (!taskDueDate) return false;
-
-      const startDate = filters.dueDateStart
-        ? parseDate(filters.dueDateStart)
+      const startDate = props.filters.dueDateStart
+        ? parseDate(props.filters.dueDateStart)
         : null;
-      const endDate = filters.dueDateEnd ? parseDate(filters.dueDateEnd) : null;
-
+      const endDate = props.filters.dueDateEnd
+        ? parseDate(props.filters.dueDateEnd)
+        : null;
       return (
         (!startDate || taskDueDate >= startDate) &&
         (!endDate || taskDueDate <= endDate)
@@ -387,70 +332,62 @@ const applyFilters = (filters: {
     });
   }
 
-  // Aggiorna lo stato dei filtri attivi
-  activeFilters.value = {
-    statuses: filters.statuses || [],
-    priorities: filters.priorities || [],
-    dateRange: {
-      start: filters.dueDateStart || "",
-      end: filters.dueDateEnd || "",
-    },
+  const priorityOrder: Record<string, number> = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4,
   };
 
-  // Applica anche l'ordinamento corrente
-  if (currentSort.value.field) {
-    applySort(currentSort.value);
-  } else {
-    localTasks.value = filteredTasks;
-  }
-};
-
-// Funzione per applicare l'ordinamento
-const applySort = (sortOptions: { field: string; order: string }) => {
-  const { field, order } = sortOptions;
-  currentSort.value = { field, order };
-
-  if (!field || !order) {
-    // Se non c'è ordinamento, ripristina solo i filtri
-    applyFilters(activeFilters.value);
-    return;
+  if (props.filters.priorities.length > 0) {
+    tasks.sort((a, b) => {
+      const aPriority = priorityOrder[a.priority.toUpperCase()] || 0;
+      const bPriority = priorityOrder[b.priority.toUpperCase()] || 0;
+      return aPriority - bPriority; // Ordine crescente: LOW -> URGENT
+    });
   }
 
-  // Crea una copia delle task attualmente filtrate
-  const tasksToSort = [...localTasks.value];
+  if (props.sortOptions.field && props.sortOptions.order) {
+    tasks.sort((a, b) => {
+      if (props.sortOptions.field === "priority") {
+        const priorityOrder: Record<string, number> = {
+          LOW: 1,
+          MEDIUM: 2,
+          HIGH: 3,
+          URGENT: 4,
+        };
+        const aPriority = priorityOrder[a.priority.toUpperCase()] || 0;
+        const bPriority = priorityOrder[b.priority.toUpperCase()] || 0;
+        return props.sortOptions.order === "asc"
+          ? aPriority - bPriority
+          : bPriority - aPriority;
+      }
 
-  tasksToSort.sort((a, b) => {
-    // Ordinamento per priorità
-    if (field === "priority") {
-      const priorityOrder = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 };
-      // Converti le priorità in uppercase e assicurati che siano chiavi valide
-      const aPriorityKey =
-        a.priority.toUpperCase() as keyof typeof priorityOrder;
-      const bPriorityKey =
-        b.priority.toUpperCase() as keyof typeof priorityOrder;
+      if (props.sortOptions.field === "dueDate") {
+        const aDate = parseDate(a.dueDate) || new Date(0);
+        const bDate = parseDate(b.dueDate) || new Date(0);
+        return props.sortOptions.order === "asc"
+          ? aDate.getTime() - bDate.getTime()
+          : bDate.getTime() - aDate.getTime();
+      }
 
-      const aPriority = priorityOrder[aPriorityKey] || 0;
-      const bPriority = priorityOrder[bPriorityKey] || 0;
+      return 0;
+    });
+  }
 
-      return order === "asc" ? aPriority - bPriority : bPriority - aPriority;
-    }
+  return tasks;
+});
 
-    // Ordinamento per data di scadenza
-    if (field === "dueDate") {
-      const aDate = parseDate(a.dueDate) || new Date(0);
-      const bDate = parseDate(b.dueDate) || new Date(0);
 
-      return order === "asc"
-        ? aDate.getTime() - bDate.getTime()
-        : bDate.getTime() - aDate.getTime();
-    }
+//----------------------METHODS------------------------
 
-    return 0;
-  });
+// Inizializzazione
+onBeforeMount(async () => {
+  await taskStore.getTaskList({ forceRefresh: true });
+  originalTasks.value = [...taskStore.tasks];
+});
 
-  localTasks.value = tasksToSort;
-};
-
+// Metodi (rimangono invariati rispetto al codice originale)
 const showSnackbar = (message: string, color = "success") => {
   snackbarMessage.value = message;
   snackbarColor.value = color;
@@ -474,7 +411,6 @@ const updateDueDate = (newDate: Date | null) => {
 const viewTask = (taskId: string) => {
   const task = taskStore.taskById(taskId);
   if (!task) return;
-
   selectedTask.value = { ...task };
   datePickerValue.value = parseDate(task.dueDate);
   modalMode.value = "view";
@@ -485,12 +421,12 @@ const viewTask = (taskId: string) => {
 const editTask = (taskId: string) => {
   const task = taskStore.taskById(taskId);
   if (!task) return;
-
   selectedTask.value = { ...task };
   datePickerValue.value = parseDate(task.dueDate);
   modalMode.value = "edit";
   isViewMode.value = false;
   dialog.value = true;
+  emit("edit-task", taskId);
 };
 
 const addTask = () => {
@@ -506,6 +442,7 @@ const addTask = () => {
   modalMode.value = "create";
   isViewMode.value = false;
   dialog.value = true;
+  emit("add-task");
 };
 
 const closeDialog = () => {
@@ -544,7 +481,6 @@ const requestSaveEditConfirm = () => {
   confirmMessage.value = t("taskList.modal.editTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
-
     try {
       const task = selectedTask.value;
       if (
@@ -558,16 +494,13 @@ const requestSaveEditConfirm = () => {
         loadingConfirm.value = false;
         return;
       }
-
       const parsedDate = parseDate(task.dueDate);
       if (!parsedDate) {
         showSnackbar(t("taskList.toast.toastDate"), "error");
         loadingConfirm.value = false;
         return;
       }
-
       const formattedDate = formatDate(parsedDate);
-
       const payload: UpdateTaskPayload = {
         taskId: task.taskId!,
         title: task.title,
@@ -576,7 +509,6 @@ const requestSaveEditConfirm = () => {
         status: task.status as UpdateTaskPayload["status"],
         dueDate: formattedDate,
       };
-
       await taskStore.updateTask(payload);
       showSnackbar(t("taskList.toast.toastEditMessage"), "info");
       closeDialog();
@@ -602,15 +534,12 @@ const saveTaskDirectly = async () => {
     showSnackbar(t("taskList.toast.toastCreate"), "error");
     return;
   }
-
   const parsedDate = parseDate(task.dueDate);
   if (!parsedDate) {
     showSnackbar(t("taskList.toast.toastDate"), "error");
     return;
   }
-
   const formattedDate = formatDate(parsedDate);
-
   try {
     const payload: AddTaskPayload = {
       title: task.title,
@@ -619,7 +548,6 @@ const saveTaskDirectly = async () => {
       status: task.status.toLowerCase() as AddTaskPayload["status"],
       dueDate: formattedDate,
     };
-
     await taskStore.addTask(payload);
     showSnackbar(t("taskList.toast.toastAddMessage"), "success");
     closeDialog();
@@ -647,12 +575,16 @@ const confirmAction = async () => {
   }
 };
 
-// Espone le funzioni per l'uso esterno
+// Esposizione delle funzioni per il componente padre
 defineExpose({
   addTask,
-  applyFilters,
-  applySort,
   editTask,
+  applyFilters: (filters: typeof props.filters) => {
+    // Non necessario con computed, mantenuto per compatibilità
+  },
+  applySort: (sortOptions: typeof props.sortOptions) => {
+    // Non necessario con computed, mantenuto per compatibilità
+  },
 });
 </script>
 
