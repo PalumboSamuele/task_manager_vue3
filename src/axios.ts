@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Crea un'istanza personalizzata di Axios
 const api = axios.create({
-  baseURL: "http://localhost:8081/task-manager/api/v1",
+  baseURL: "https://task-manager-backend-ygff.onrender.com/task-manager/api/v1",
 });
 
 // Endpoints pubblici (non richiedono Authorization)
