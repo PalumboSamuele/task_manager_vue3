@@ -10,29 +10,28 @@
         <h3 class="text-h6 mt-3">
           {{
             localTasks.length === 0 && originalTasks.length !== 0
-              ? "Nessuna task con queste caratteristiche è stata trovata"
-              : "Task non trovate"
+              ? $t("taskList.taskFilt")
+              : $t("taskList.noTask")
           }}
         </h3>
-        <p>Inizia ad aggiungere una nuova task!</p>
+        <p>{{ $t("taskList.addMess") }}</p>
         <v-btn
           class="mt-4"
           color="primary"
           append-icon="mdi-plus"
           @click="addTask"
         >
-          Aggiungi Task
+          {{ $t("taskList.addTask") }}
         </v-btn>
       </v-col>
       <Draggable
         v-model="localTasks"
         item-key="taskId"
         handle=".drag-handle"
-        class="d-flex flex-wrap w-100"
+        class="d-flex flex-wrap w-100 px-4"
         :animation="200"
       >
         <template #item="{ element: task }">
-
           <v-col cols="12" lg="4" md="6" :key="task.taskId">
             <base-task
               :taskId="task.taskId"
@@ -59,28 +58,32 @@
           <v-row dense>
             <v-col cols="12">
               <v-text-field
-                label="Titolo Task"
+                :label="t('taskList.modal.title')"
                 color="deep-purple-accent-3"
                 v-model="selectedTask.title"
                 :readonly="isViewMode"
+                :rules="titleRules"
                 required
                 variant="outlined"
               />
             </v-col>
             <v-col cols="12">
               <v-textarea
-                label="Descrizione"
+                :label="t('taskList.modal.description')"
                 color="deep-purple-accent-3"
                 v-model="selectedTask.description"
                 :readonly="isViewMode"
+                :rules="descriptionRules"
                 variant="outlined"
               />
             </v-col>
             <v-col cols="12" md="6">
               <v-select
-                :items="['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
+                :label="t('taskList.modal.selectPriority')"
+                :items="priorityOptions"
+                item-title="text"
+                item-value="value"
                 color="deep-purple-accent-3"
-                label="Priorità"
                 v-model="selectedTask.priority"
                 :readonly="isViewMode"
                 required
@@ -89,9 +92,11 @@
             </v-col>
             <v-col cols="12" md="6">
               <v-select
-                :items="['PENDING', 'IN_PROGRESS', 'COMPLETED']"
+                :label="t('taskList.modal.selectStatus')"
+                :items="statusOptions"
+                item-title="text"
+                item-value="value"
                 color="deep-purple-accent-3"
-                label="Stato"
                 v-model="selectedTask.status"
                 :readonly="isViewMode"
                 required
@@ -108,7 +113,7 @@
               >
                 <template v-slot:activator="{ props: menuProps }">
                   <v-text-field
-                    label="Data di Scadenza"
+                    :label="t('taskFilter.dueDate')"
                     color="deep-purple-accent-3"
                     innericon="mdi-calendar"
                     v-model="selectedTask.dueDate"
@@ -134,7 +139,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn
-            text="Chiudi"
+            :text="t('taskList.modal.closeModal')"
             color="red-accent-4"
             variant="flat"
             @click="closeDialog"
@@ -143,7 +148,7 @@
           <v-btn
             v-if="isViewMode"
             color="light-blue-accent-4"
-            text="Modifica"
+            :text="t('taskList.modal.edit')"
             variant="tonal"
             @click="enableEditMode"
             :disabled="confirmDialog"
@@ -151,7 +156,7 @@
           <v-btn
             v-else
             color="light-blue-accent-4"
-            text="Salva"
+            :text="t('taskList.modal.okTitleSave')"
             variant="tonal"
             @click="onSaveClick"
             :disabled="confirmDialog"
@@ -179,7 +184,7 @@
               @click="cancelConfirm"
               :disabled="loadingConfirm"
             >
-              Annulla
+              {{ $t("taskList.modal.cancel") }}
             </v-btn>
             <v-btn
               variant="elevated"
@@ -188,7 +193,7 @@
               :loading="loadingConfirm"
               class="ms-2"
             >
-              Conferma
+              {{ $t("taskList.modal.confirm") }}
             </v-btn>
           </v-card-actions>
         </v-card-actions>
@@ -211,6 +216,7 @@
 // TASKLIST
 
 import Draggable from "vuedraggable";
+import { useDisplay } from "vuetify";
 import {
   useTaskStore,
   type Task,
@@ -218,10 +224,38 @@ import {
   type UpdateTaskPayload,
 } from "../stores/tasks/tasksStore";
 import { parse, format, isValid, startOfToday } from "date-fns";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const today = startOfToday();
+const display = useDisplay();
 const taskStore = useTaskStore();
+const statusOptions = computed(() => [
+  { value: "PENDING", text: t("taskFilter.statusFilter.pending") },
+  { value: "IN_PROGRESS", text: t("taskFilter.statusFilter.inProgress") },
+  { value: "COMPLETED", text: t("taskFilter.statusFilter.completed") },
+]);
 
+const priorityOptions = computed(() => [
+  { value: "LOW", text: t("taskFilter.priorityFilter.low") },
+  { value: "MEDIUM", text: t("taskFilter.priorityFilter.medium") },
+  { value: "HIGH", text: t("taskFilter.priorityFilter.high") },
+  { value: "URGENT", text: t("taskFilter.priorityFilter.urgent") },
+]);
+
+// Layout a lista per mobile
+const column = computed(() => {
+  switch (true) {
+    case display.smAndDown.value:
+      return 12; // Full width per layout a lista in mobile
+    case display.md.value:
+      return 6; // 2 colonne su tablet
+    case display.lgAndUp.value:
+      return 4; // 3 colonne su desktop
+    default:
+      return 12;
+  }
+});
 
 const titleRules = [
   (v: string) => v.length <= 32 || t("taskList.modal.titleValidate"),
@@ -229,19 +263,6 @@ const titleRules = [
 const descriptionRules = [
   (v: string) => v.length <= 200 || t("taskList.modal.descriptionValidate"),
 ];
-
-const props = defineProps<{
-  filters: {
-    statuses: string[];
-    priorities: string[];
-    dueDateStart: string | null;
-    dueDateEnd: string | null;
-  };
-  sortOptions: {
-    field: string;
-    order: string;
-  };
-}>();
 
 //-----------------REACTIVE VARIABLES--------------------
 
@@ -286,7 +307,6 @@ const dialogTitle = computed(() =>
     : modalMode.value === "edit"
     ? t("taskList.modal.titleEdit")
     : t("taskList.modal.titleCreate")
-
 );
 
 //----------------------WATCHES------------------------
@@ -301,12 +321,14 @@ watch(
 
 // Aggiorna le task locali quando cambiano quelle nello store
 watch(
-  [() => taskStore.tasks, () => props.filters, () => props.sortOptions],
-  ([newTasks, newFilters, newSort]) => {
+  () => taskStore.tasks,
+  (newTasks) => {
     originalTasks.value = Array.isArray(newTasks) ? [...newTasks] : [];
-    const filtered = applyFilters(newFilters);
-    const sorted = newSort.field ? applySort(newSort, filtered) : filtered;
-    localTasks.value = sorted;
+    // Riapplica filtri e ordinamento
+    applyFilters(activeFilters.value);
+    if (currentSort.value.field) {
+      applySort(currentSort.value);
+    }
   },
   { deep: true }
 );
@@ -329,6 +351,7 @@ const applyFilters = (filters: {
 }) => {
   let filteredTasks = [...originalTasks.value];
 
+  // Filtro per stato (case insensitive)
   if (filters.statuses && filters.statuses.length > 0) {
     filteredTasks = filteredTasks.filter((task) =>
       filters.statuses?.some(
@@ -337,6 +360,7 @@ const applyFilters = (filters: {
     );
   }
 
+  // Filtro per priorità (case insensitive)
   if (filters.priorities && filters.priorities.length > 0) {
     filteredTasks = filteredTasks.filter((task) =>
       filters.priorities?.some(
@@ -345,14 +369,17 @@ const applyFilters = (filters: {
     );
   }
 
+  // Filtro per data di scadenza
   if (filters.dueDateStart || filters.dueDateEnd) {
     filteredTasks = filteredTasks.filter((task) => {
       const taskDueDate = parseDate(task.dueDate);
       if (!taskDueDate) return false;
+
       const startDate = filters.dueDateStart
         ? parseDate(filters.dueDateStart)
         : null;
       const endDate = filters.dueDateEnd ? parseDate(filters.dueDateEnd) : null;
+
       return (
         (!startDate || taskDueDate >= startDate) &&
         (!endDate || taskDueDate <= endDate)
@@ -360,6 +387,7 @@ const applyFilters = (filters: {
     });
   }
 
+  // Aggiorna lo stato dei filtri attivi
   activeFilters.value = {
     statuses: filters.statuses || [],
     priorities: filters.priorities || [],
@@ -369,35 +397,49 @@ const applyFilters = (filters: {
     },
   };
 
-  return filteredTasks;
+  // Applica anche l'ordinamento corrente
+  if (currentSort.value.field) {
+    applySort(currentSort.value);
+  } else {
+    localTasks.value = filteredTasks;
+  }
 };
 
 // Funzione per applicare l'ordinamento
-const applySort = (
-  sortOptions: { field: string; order: string },
-  tasks: Task[]
-): Task[] => {
+const applySort = (sortOptions: { field: string; order: string }) => {
   const { field, order } = sortOptions;
   currentSort.value = { field, order };
 
-  if (!field || !order) return tasks;
+  if (!field || !order) {
+    // Se non c'è ordinamento, ripristina solo i filtri
+    applyFilters(activeFilters.value);
+    return;
+  }
 
-  const sortedTasks = [...tasks].sort((a, b) => {
+  // Crea una copia delle task attualmente filtrate
+  const tasksToSort = [...localTasks.value];
+
+  tasksToSort.sort((a, b) => {
+    // Ordinamento per priorità
     if (field === "priority") {
-      const priorityOrder: Record<string, number> = {
-        LOW: 1,
-        MEDIUM: 2,
-        HIGH: 3,
-        URGENT: 4,
-      };
-      const aPriority = priorityOrder[a.priority.toUpperCase()] || 0;
-      const bPriority = priorityOrder[b.priority.toUpperCase()] || 0;
+      const priorityOrder = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 };
+      // Converti le priorità in uppercase e assicurati che siano chiavi valide
+      const aPriorityKey =
+        a.priority.toUpperCase() as keyof typeof priorityOrder;
+      const bPriorityKey =
+        b.priority.toUpperCase() as keyof typeof priorityOrder;
+
+      const aPriority = priorityOrder[aPriorityKey] || 0;
+      const bPriority = priorityOrder[bPriorityKey] || 0;
+
       return order === "asc" ? aPriority - bPriority : bPriority - aPriority;
     }
 
+    // Ordinamento per data di scadenza
     if (field === "dueDate") {
       const aDate = parseDate(a.dueDate) || new Date(0);
       const bDate = parseDate(b.dueDate) || new Date(0);
+
       return order === "asc"
         ? aDate.getTime() - bDate.getTime()
         : bDate.getTime() - aDate.getTime();
@@ -406,7 +448,7 @@ const applySort = (
     return 0;
   });
 
-  return sortedTasks;
+  localTasks.value = tasksToSort;
 };
 
 const showSnackbar = (message: string, color = "success") => {
@@ -480,15 +522,15 @@ const enableEditMode = () => {
 };
 
 const requestDeleteTask = (taskId: string) => {
-  confirmTitle.value = "Conferma Eliminazione";
-  confirmMessage.value = "Sei sicuro di voler eliminare questa task?";
+  confirmTitle.value = t("taskList.modal.deleteTaskTitle");
+  confirmMessage.value = t("taskList.modal.deleteTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
     try {
       await taskStore.deleteTask({ taskId });
-      showSnackbar("Task eliminata", "error");
+      showSnackbar(t("taskList.toast.toastDeleteMessage"), "error");
     } catch (error) {
-      showSnackbar("Errore durante l'eliminazione della task", "error");
+      showSnackbar(t("taskList.toast.toastErrorDelete"), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -498,8 +540,8 @@ const requestDeleteTask = (taskId: string) => {
 };
 
 const requestSaveEditConfirm = () => {
-  confirmTitle.value = "Conferma Modifica";
-  confirmMessage.value = "Sei sicuro di voler salvare le modifiche apportate?";
+  confirmTitle.value = t("taskList.modal.editTaskTitle");
+  confirmMessage.value = t("taskList.modal.editTaskMessage");
   confirmCallback.value = async () => {
     loadingConfirm.value = true;
 
@@ -512,14 +554,14 @@ const requestSaveEditConfirm = () => {
         !task.status ||
         !task.dueDate
       ) {
-        showSnackbar("Compila tutti i campi ", "error");
+        showSnackbar(t("taskList.toast.toastCreate"), "error");
         loadingConfirm.value = false;
         return;
       }
 
       const parsedDate = parseDate(task.dueDate);
       if (!parsedDate) {
-        showSnackbar("Data non valida", "error");
+        showSnackbar(t("taskList.toast.toastDate"), "error");
         loadingConfirm.value = false;
         return;
       }
@@ -536,10 +578,10 @@ const requestSaveEditConfirm = () => {
       };
 
       await taskStore.updateTask(payload);
-      showSnackbar("Task modificata", "info");
+      showSnackbar(t("taskList.toast.toastEditMessage"), "info");
       closeDialog();
     } catch (error) {
-      showSnackbar("Errore durante il salvataggio", "error");
+      showSnackbar(t("taskList.toast.toastErrorModify"), "error");
     } finally {
       loadingConfirm.value = false;
       confirmDialog.value = false;
@@ -557,13 +599,13 @@ const saveTaskDirectly = async () => {
     !task.status ||
     !task.dueDate
   ) {
-    showSnackbar("Compila tutti i campi", "error");
+    showSnackbar(t("taskList.toast.toastCreate"), "error");
     return;
   }
 
   const parsedDate = parseDate(task.dueDate);
   if (!parsedDate) {
-    showSnackbar("Data non valida", "error");
+    showSnackbar(t("taskList.toast.toastDate"), "error");
     return;
   }
 
@@ -579,10 +621,10 @@ const saveTaskDirectly = async () => {
     };
 
     await taskStore.addTask(payload);
-    showSnackbar("Task creata", "success");
+    showSnackbar(t("taskList.toast.toastAddMessage"), "success");
     closeDialog();
   } catch {
-    showSnackbar("Errore durante la creazione della task", "error");
+    showSnackbar(t("taskLost.toast.toastErrorAdd"), "error");
   }
 };
 
