@@ -3,6 +3,7 @@
     <task-filter
       @change-filter="handleFilterChange"
       @change-sort="handleSortChange"
+      @add-task="handleAddTask"
       @change-view="changeViewMode"
     >
       <template #taskList>
@@ -12,16 +13,12 @@
             v-if="modeGrid"
             :filters="currentFilters"
             :sort-options="sortOptions"
-            @add-task="handleAddTask"
-            @edit-task="handleEditTask"
           ></task-list>
           <task-data-table
             v-else
             ref="taskDataTableRef"
             :filters="currentFilters"
             :sort-options="sortOptions"
-            @add-task="handleAddTask"
-            @edit-task="handleEditTask"
             @change-view="changeViewMode"
           ></task-data-table>
         </v-fade-transition>
@@ -32,7 +29,7 @@
 
 <script setup lang="ts">
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 
 const taskStore = useTaskStore();
 const modeGrid = computed(() => taskStore.getVisualizationMode === "grid");
