@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import api from "@/axios";
-import { useAuthStore } from "../auth/authStore";
 
 export interface Task {
   taskId: string;
@@ -102,7 +101,6 @@ export const useTaskStore = defineStore("tasks", {
       }
 
       const ENDPOINT_URL = `/users/${userId}/tasks`;
-      const authStore = useAuthStore();
 
       try {
         const response = await api.get<Task[]>(ENDPOINT_URL);
@@ -124,9 +122,6 @@ export const useTaskStore = defineStore("tasks", {
 
         this.setFetchTimestamp();
       } catch (error: any) {
-        if (error.response?.status === 401) {
-          authStore.logout();
-        }
         if (error.response?.status === 404) {
           this.$patch({
             tasks: [],
@@ -152,7 +147,7 @@ export const useTaskStore = defineStore("tasks", {
       }
 
       const ENDPOINT_URL = `/users/${userId}/tasks`;
-      const authStore = useAuthStore();
+
       const task = {
         ...payload,
         userId,
@@ -167,9 +162,6 @@ export const useTaskStore = defineStore("tasks", {
         return response.data;
       } catch (error: any) {
         console.error("Error response:", error.response?.data);
-        if (error.response?.status === 401) {
-          authStore.logout();
-        }
         throw new Error(
           error.response?.data?.message ||
             error.message ||
@@ -188,15 +180,12 @@ export const useTaskStore = defineStore("tasks", {
       }
 
       const ENDPOINT_URL = `/users/${userId}/tasks/${payload.taskId}`;
-      const authStore = useAuthStore();
 
       try {
         await api.delete(ENDPOINT_URL);
         await this.getTaskList({ forceRefresh: true });
       } catch (error: any) {
-        if (error.response?.status === 401) {
-          authStore.logout();
-        } else if (error.response?.status === 404) {
+        if (error.response?.status === 404) {
           this.$patch({
             tasks: this.tasks.filter((task) => task.taskId !== payload.taskId),
           });
@@ -220,7 +209,6 @@ export const useTaskStore = defineStore("tasks", {
 
       const taskId = payload.taskId;
       const ENDPOINT_URL = `/users/${userId}/tasks/${taskId}`;
-      const authStore = useAuthStore();
 
       const apiPayload: Partial<
         Omit<Task, "taskId" | "userId" | "createdDate">
@@ -245,9 +233,6 @@ export const useTaskStore = defineStore("tasks", {
         await this.getTaskList({ forceRefresh: true });
         return response.data;
       } catch (error: any) {
-        if (error.response?.status === 401) {
-          authStore.logout();
-        }
         throw new Error(
           error.response?.data?.message ||
             error.message ||
