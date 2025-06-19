@@ -12,7 +12,7 @@ const ita: LocaleMessages = {
   taskList: {
     addTask: "Aggiungi attività",
     noTaskFound: "Nessuna attività trovata",
-    taskFilt: "Nessuna task con queste caratteristiche &egrave; stata trovata",
+    taskFilt: "Nessuna task con queste caratteristiche è stata trovata",
     noTask: "Nessuna task trovata",
     addMess: "Inizia ad aggiungere una nuova task!",
     modal: {
@@ -142,16 +142,16 @@ const ita: LocaleMessages = {
     signup: "Registrati",
     invalidCredentials: "Nome utente o password non validi.",
     loginEr: "Credenziali errate",
-    bohError: "Si &egrave; verificato un errore inatteso durante il login.",
+    bohError: "Si è verificato un errore inatteso durante il login.",
   },
   store: {
     errorRegister:
       "Registrazione fallita. Si prega di controllare i propri dati.",
     idError: "ID utente non trovato",
-    bohError: "Si &egrave; verificato un errore inaspettato",
-    newTaskError: "Non &egrave; possibile creare la task",
-    deleteTaskError: "Non &egrave; possibile cancellare la task",
-    updateTaskError: "Non &egrave; possibile modificare la task",
+    bohError: "Si è verificato un errore inaspettato",
+    newTaskError: "Non è possibile creare la task",
+    deleteTaskError: "Non è possibile cancellare la task",
+    updateTaskError: "Non è possibile modificare la task",
   },
 };
 
