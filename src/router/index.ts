@@ -3,6 +3,7 @@ import UserAuth from "../components/pages/UserAuth.vue";
 // import NotFound from "./components/pages/NotFound.vue";
 import MainPage from "@/components/pages/MainPage.vue";
 import SignUp from "@/components/pages/SignUp.vue";
+import { useAuthStore } from "@/components/stores/auth/authStore.js";
 
 const routes = [
   {
@@ -38,9 +39,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-  const { useAuthStore } = await import(
-    "@/components/stores/auth/authStore.js"
-  );
   const authStore = useAuthStore();
 
   const isAuthenticated = authStore.isAuthenticated || authStore.tryLogin();
