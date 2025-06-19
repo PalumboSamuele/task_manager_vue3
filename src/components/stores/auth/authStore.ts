@@ -99,7 +99,6 @@ export const useAuthStore = defineStore("auth", {
       }
 
       if (token && userId && parsedExpiration > 0) {
-        // 12. Aggiungi controllo per expiration
         this.token = token;
         this.userId = userId;
         this.firstVisit = false;
@@ -121,7 +120,6 @@ export const useAuthStore = defineStore("auth", {
       localStorage.removeItem("userId");
       localStorage.removeItem("expiration");
       if (timer) {
-        // 13. Controlla se timer è definito prima di cancellarlo
         clearTimeout(timer);
         timer = undefined; // Resetta timer dopo averlo cancellato
       }
@@ -132,7 +130,6 @@ export const useAuthStore = defineStore("auth", {
     },
 
     setFirstVisit(payload: boolean) {
-      // 6. Tipizza il parametro payload
       this.firstVisit = payload;
     },
   },

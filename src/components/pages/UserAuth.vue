@@ -127,24 +127,20 @@ const submitForm = handleSubmit(async (values) => {
     });
     router.replace(`/users/${authStore.userId}/tasks/`);
   } catch (err) {
-    console.error("Errore durante il login:", err);
-
     if (err.response) {
-      if (err.response.status === 404) {
-        error.value =
-          "L'endpoint di login non è stato trovato. Controlla l'URL della tua API nel backend.";
-      } else if (err.response.status === 401 || err.response.status === 403) {
-        error.value = "Credenziali non valide. Verifica username e password.";
-      } else {
-        error.value = `Errore del server: ${err.response.status} - ${
-          err.response.data.message || err.message
-        }`;
+      if (
+        err.response.status === 401 ||
+        err.response.status === 403 ||
+        err.response.status === 404 ||
+        err.response.status === 400
+      ) {
+        error.value = t('loginForm.loginEr');
       }
     } else if (err.request) {
-      error.value = t("loginForm.loginError");
+      error.value = t('loginForm.loginEr');
     } else {
       error.value =
-        err.message || "Si è verificato un errore inatteso durante il login.";
+        err.message || t('loginForm.bohError');
     }
   } finally {
     isLoading.value = false; // Ferma lo stato di caricamento

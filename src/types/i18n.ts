@@ -117,6 +117,7 @@ export interface LocaleMessages {
     signup: string;
     alreadyRegistered: string;
     login: string;
+    emailEmpty: string;
     emailInvalid: string;
     emailExample: string;
   };
@@ -135,7 +136,17 @@ export interface LocaleMessages {
     notAlreadyRegistered: string;
     signup: string;
     invalidCredentials: string;
+    loginEr: string;
+    bohError: string;
   };
+  store:{
+    errorRegister: string;
+    idError: string;
+    bohError: string;
+    newTaskError: string;
+    deleteTaskError: string;
+    updateTaskError: string; 
+  },
 }
 
 export type SupportedLocales = "en" | "it";

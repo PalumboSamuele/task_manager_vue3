@@ -8,9 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BaseCard: typeof import('./components/ui/BaseCard.vue')['default']
     BaseTask: typeof import('./components/ui/BaseTask.vue')['default']
-    ConfirmDialog: typeof import('./components/ui/ConfirmDialog.vue')['default']
     MainPage: typeof import('./components/pages/MainPage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
@@ -18,7 +16,6 @@ declare module 'vue' {
     TaskDataTable: typeof import('./components/pages/TaskDataTable.vue')['default']
     TaskFilter: typeof import('./components/filter/TaskFilter.vue')['default']
     TaskList: typeof import('./components/pages/TaskList.vue')['default']
-    TaskModal: typeof import('./components/ui/TaskModal.vue')['default']
     TheHeader: typeof import('./components/layout/TheHeader.vue')['default']
     UserAuth: typeof import('./components/pages/UserAuth.vue')['default']
   }

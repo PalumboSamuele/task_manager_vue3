@@ -15,24 +15,23 @@
         <v-text-field
           v-model="email.value.value"
           density="compact"
-          :placeholder="$t('signupForm.emailExample')"
+          placeholder="esempio@email.com"
           prepend-inner-icon="mdi-email-outline"
           variant="outlined"
           :error-messages="email.errorMessage.value"
-          @blur="email.handleBlur"
         ></v-text-field>
 
         <div class="text-subtitle-1 text-medium-emphasis">
-          {{ $t("signupForm.username") }}
+          {{ $t("loginForm.username") }}
         </div>
+
         <v-text-field
           v-model="username.value.value"
           density="compact"
-          :placeholder="$t('signupForm.username')"
-          prepend-inner-icon="mdi-account-outline"
+          :placeholder="$t('loginForm.placeholderName')"
+          prepend-inner-icon="mdi-email-outline"
           variant="outlined"
           :error-messages="username.errorMessage.value"
-          @blur="username.handleBlur"
         ></v-text-field>
 
         <div
@@ -40,13 +39,14 @@
         >
           Password
         </div>
+
         <v-text-field
           v-model="password.value.value"
           :error-messages="password.errorMessage.value"
           :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
           :type="visible ? 'text' : 'password'"
           density="compact"
-          :placeholder="$t('signupForm.placeholderPassword')"
+          :placeholder="$t('loginForm.placeholderPassword')"
           prepend-inner-icon="mdi-lock-outline"
           variant="outlined"
           @click:append-inner="visible = !visible"
@@ -61,8 +61,9 @@
         >
           {{ error }}
         </v-alert>
+
         <v-btn
-          class="mb-8 mt-7"
+          class="mb-8 mt-15"
           color="blue"
           size="large"
           variant="tonal"
@@ -73,18 +74,18 @@
         >
           {{ $t("signupForm.signup") }}
         </v-btn>
+
+        <h4 class="text-subtitle-1 text-center mt-15 mb-1 pt-8">
+          {{ $t("signupForm.alreadyRegistered") }}
+        </h4>
+
+        <v-card-text class="text-center">
+          <router-link to="/login" class="text-blue text-decoration-none">
+            {{ $t("signupForm.login") }}
+            <v-icon icon="mdi-chevron-right"></v-icon>
+          </router-link>
+        </v-card-text>
       </v-form>
-
-      <h4 class="text-subtitle-1 text-center mt-5 mb-1 pt-4">
-        {{ $t("signupForm.alreadyRegistered") }}
-      </h4>
-
-      <v-card-text class="text-center">
-        <router-link to="/login" class="text-blue text-decoration-none">
-          {{ $t("signupForm.login") }}
-          <v-icon icon="mdi-chevron-right"></v-icon>
-        </router-link>
-      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -101,23 +102,27 @@ const { t } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
 
-const isLoading = ref(false); // Per lo stato di caricamento del pulsante
+const isLoading = ref(false);
 const error = ref(null);
 const visible = ref(false);
+
+const language = localStorage.getItem("locale");
 
 const { handleSubmit } = useForm({
   validationSchema: {
     email(value) {
-      if (!value) return "L'email è richiesta.";
-      if (!/^[a-z0-9.-]+@[a-z.-]+\.[a-z]+$/i.test(value))
-        return t("signupForm.emailInvalid");
+      if (!value) return t("signupForm.emailEmpty");
+      const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!pattern.test(value))
+        return language === "en"
+          ? "Enter a valid email"
+          : "Inserisci una mail valida";
       return true;
     },
     username(value) {
       if (!value) return t("signupForm.usernameRequired");
       if (value.length < 3) return t("signupForm.usernameInvalid");
       if (value.length > 32) return t("signupForm.usernameInvalid");
-
       return true;
     },
     password(value) {
@@ -137,17 +142,19 @@ const submitForm = handleSubmit(async (values) => {
   error.value = null;
   isLoading.value = true;
 
-  const formPayload = {
-    email: values.email,
-    username: values.username,
-    password: values.password,
-  };
-
   try {
-    await authStore.register(formPayload);
-    router.replace("/login"); // Reindirizza l'utente alla pagina di login dopo la registrazione
+    await authStore.register(values);
+    router.replace("/login");
   } catch (err) {
-    error.value = t("signupForm.signupError"); // Usa t()
+    if (err.response) {
+      if ([400, 401, 403, 404].includes(err.response.status)) {
+        error.value = t("loginForm.loginEr");
+      }
+    } else if (err.request) {
+      error.value = t("loginForm.loginEr");
+    } else {
+      error.value = err.message || t("loginForm.bohError");
+    }
   } finally {
     isLoading.value = false;
   }
