@@ -3,7 +3,6 @@
     <task-filter
       @change-filter="handleFilterChange"
       @change-sort="handleSortChange"
-      @add-task="handleAddTask"
       @change-view="changeViewMode"
     >
       <template #taskList>
@@ -33,7 +32,7 @@
 
 <script setup lang="ts">
 import { useTaskStore } from "@/components/stores/tasks/tasksStore";
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 
 const taskStore = useTaskStore();
 const modeGrid = computed(() => taskStore.getVisualizationMode === "grid");
