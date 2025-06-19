@@ -121,7 +121,7 @@ const { handleSubmit } = useForm({
     },
     username(value) {
       if (!value) return t("signupForm.usernameRequired");
-      if (value.length < 3) return t("signupForm.usernameInvalid");
+      if (value.length < 6) return t("signupForm.usernameInvalid");
       if (value.length > 32) return t("signupForm.usernameInvalid");
       return true;
     },

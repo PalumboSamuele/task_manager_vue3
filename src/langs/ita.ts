@@ -109,7 +109,7 @@ const ita: LocaleMessages = {
     username: "Nome utente",
     placeholderName: "Inserisci nome utente",
     usernameInvalid:
-      "Nome utente non valido, deve contenere almeno 3 caratteri e massimo 32",
+      "Nome utente non valido, deve contenere almeno 6 caratteri e massimo 32",
     usernameRequired: "Username obbligatorio",
     password: "Password",
     placeholderPassword: "Inserisci la password",
@@ -129,7 +129,7 @@ const ita: LocaleMessages = {
     username: "Nome utente",
     usernameRequired: "Username obbligatorio",
     usernameInvalid:
-      "Nome utente non valido, deve contenere almeno 3 caratteri e massimo 32",
+      "Nome utente non valido, deve contenere almeno 6 caratteri e massimo 32",
     placeholderName: "Inserisci nome utente",
     loginError: "Il server non risponde",
     password: "Password",

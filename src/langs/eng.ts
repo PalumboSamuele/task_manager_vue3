@@ -110,7 +110,7 @@ const eng: LocaleMessages = {
     usernameRequired: "Username required",
     placeholderName: "Enter the username",
     usernameInvalid:
-      "Incorrect username (must be at least 3 characters long and maximum 32)",
+      "Incorrect username (must be at least 6 characters long and maximum 32)",
     password: "Password",
     signupError: "Registration failed. Please try again later",
     passwordRequired: "Password required",
@@ -131,7 +131,7 @@ const eng: LocaleMessages = {
     placeholderName: "Enter the username",
     passwordRequired: "Password required",
     usernameInvalid:
-      "Incorrect username (must be at least 3 characters long and maximum 32)",
+      "Incorrect username (must be at least 6 characters long and maximum 32)",
     loginError: "The server is not responding",
     password: "Password",
     placeholderPassword: "Enter you password",

@@ -9,11 +9,9 @@
         <v-icon size="48" color="grey-lighten-1">mdi-inbox</v-icon>
         <h3 class="text-h6 mt-3">
           {{
-
             filteredAndSortedTasks.length === 0 && originalTasks.length !== 0
               ? $t("taskList.taskFilt")
               : $t("taskList.noTask")
-
           }}
         </h3>
         <p>{{ $t("taskList.addMess") }}</p>
@@ -229,7 +227,6 @@ import {
 import { parse, format, isValid, startOfToday } from "date-fns";
 import { useI18n } from "vue-i18n";
 
-
 const today = startOfToday();
 const display = useDisplay();
 const taskStore = useTaskStore();
@@ -305,7 +302,7 @@ const dialogTitle = computed(() =>
 );
 
 const filteredAndSortedTasks = computed(() => {
-  let tasks = [...taskStore.tasks];
+  let tasks = toRaw([...taskStore.tasks]);
 
   if (props.filters.statuses.length > 0) {
     tasks = tasks.filter((task) =>
@@ -386,7 +383,6 @@ const filteredAndSortedTasks = computed(() => {
   return tasks;
 });
 
-
 //----------------------METHODS------------------------
 
 // Inizializzazione
@@ -398,13 +394,13 @@ onBeforeMount(async () => {
 // Nuova funzione per validare i campi
 const validateFields = (): boolean => {
   let isValid = true;
-  
+
   // Reset errori
   titleError.value = "";
   descriptionError.value = "";
 
   const task = selectedTask.value;
-  
+
   // Validazione titolo
   if (!task.title || task.title.trim() === "") {
     isValid = false;
@@ -421,7 +417,10 @@ const validateFields = (): boolean => {
 
   // Se non è valido, mostra il messaggio generale
   if (!isValid) {
-    showSnackbar("Tutti i campi sono obbligatori e devono rispettare i limiti di caratteri", "error");
+    showSnackbar(
+      "Tutti i campi sono obbligatori e devono rispettare i limiti di caratteri",
+      "error"
+    );
   }
 
   return isValid;
@@ -449,7 +448,7 @@ const updateDueDate = (newDate: Date | null) => {
 };
 
 const viewTask = (taskId: string) => {
-  const task = taskStore.taskById(taskId);
+  const task = toRaw(taskStore.taskById(taskId));
   if (!task) return;
   selectedTask.value = { ...task };
   datePickerValue.value = parseDate(task.dueDate);
@@ -461,7 +460,7 @@ const viewTask = (taskId: string) => {
 };
 
 const editTask = (taskId: string) => {
-  const task = taskStore.taskById(taskId);
+  const task = toRaw(taskStore.taskById(taskId));
   if (!task) return;
   selectedTask.value = { ...task };
   datePickerValue.value = parseDate(task.dueDate);
@@ -469,7 +468,6 @@ const editTask = (taskId: string) => {
   isViewMode.value = false;
   dialog.value = true;
   emit("edit-task", taskId);
-
 };
 
 const addTask = () => {
@@ -494,7 +492,6 @@ const addTask = () => {
 const resetValidationErrors = () => {
   titleError.value = "";
   descriptionError.value = "";
-
 };
 
 const closeDialog = () => {
@@ -598,7 +595,6 @@ const saveTaskDirectly = async () => {
     showSnackbar(t("taskLost.toast.toastErrorAdd"), "error");
   }
 };
-
 
 const onSaveClick = () => {
   if (modalMode.value === "create") {
