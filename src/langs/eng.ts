@@ -15,6 +15,8 @@ const eng: LocaleMessages = {
     taskFilt: "No tasks with these characteristics were found",
     noTask: "No Tasks found",
     addMess: "Start adding a new task!",
+    taskSearch: "Search by title",
+    taskBar: "All fields are required and must meet the character limits",
     modal: {
       titleCreate: "Create new task",
       titleEdit: "Modify task",

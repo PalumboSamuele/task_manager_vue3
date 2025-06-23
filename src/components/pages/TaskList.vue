@@ -418,7 +418,7 @@ const validateFields = (): boolean => {
   // Se non è valido, mostra il messaggio generale
   if (!isValid) {
     showSnackbar(
-      "Tutti i campi sono obbligatori e devono rispettare i limiti di caratteri",
+      t('taskList.taskBar'),
       "error"
     );
   }

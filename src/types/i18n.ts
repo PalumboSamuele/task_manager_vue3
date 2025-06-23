@@ -14,6 +14,8 @@ export interface LocaleMessages {
     taskFilt: string;
     noTask: string;
     addMess: string;
+    taskSearch: string;
+    taskBar: string;
     modal: {
       title: string;
       titleCreate: string;

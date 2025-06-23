@@ -15,6 +15,8 @@ const ita: LocaleMessages = {
     taskFilt: "Nessuna task con queste caratteristiche è stata trovata",
     noTask: "Nessuna task trovata",
     addMess: "Inizia ad aggiungere una nuova task!",
+    taskSearch: "Cerca per titolo",
+    taskBar: "Tutti i campi sono obbligatori e devono rispettare i limiti di caratteri",
     modal: {
       titleCreate: "Crea una nuova attività",
       title: "Titolo Task",
