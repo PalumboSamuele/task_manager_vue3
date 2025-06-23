@@ -5,7 +5,7 @@
       <v-text-field
         v-model="search"
         density="compact"
-        label= "t('taskList.taskSearch')"
+        :label= "$t('taskList.taskSearch')"
         prepend-inner-icon="mdi-magnify"
         variant="solo-filled"
         hide-details
